@@ -1,0 +1,17 @@
+# Python / Django - burnout_back
+burnout_back/venv/
+burnout_back/__pycache__/
+burnout_back/db.sqlite3
+*.pyc
+.env
+
+# React / Node - burnout_front 
+burnout_front/node_modules/
+burnout_front/dist/
+burnout_front/.env
+burnout_front/.DS_Store
+
+# General 
+.vscode/
+.idea/
+*.log
