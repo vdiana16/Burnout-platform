@@ -1,0 +1,100 @@
+@import './Global.css';
+
+.login-page {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-gradient);
+  margin: 0;
+  padding: 0;
+}
+
+.login-paper {
+  /* Folosim aceleași dimensiuni și padding ca la register pentru consistență */
+  padding: 2.5rem !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--card-shadow) !important;
+  width: 100%;
+  max-width: 420px; /* Login-ul rămâne puțin mai îngust decât Register */
+  text-align: center;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.login-title {
+  text-align: center;
+  font-weight: bold !important;
+  color: #2d6a4f !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.login-subtitle {
+  color: var(--text-body);
+  margin-bottom: 2rem !important;
+  text-align: center;
+  display: block;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /* Același spațiu între rânduri ca la register */
+}
+
+/* Stiluri pentru input-urile Material UI - Identice cu Register */
+.login-input .MuiOutlinedInput-root {
+  border-radius: 10px;
+  background-color: white;
+}
+
+.login-input .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--primary-menta) !important;
+}
+
+.login-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--primary-dark) !important;
+}
+
+/* Butonul de login - Identic cu cel de register */
+.login-button {
+  margin-top: 1rem !important;
+  padding: 14px 0 !important;
+  border-radius: 10px !important;
+  background: var(--primary-menta) !important;
+  color: #1b4332 !important;
+  font-weight: bold !important;
+  text-transform: uppercase !important; /* Păstrăm majusculele aici */
+  font-size: 1.1rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.login-button:hover {
+  background: var(--primary-dark) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: var(--text-body);
+}
+
+.login-link {
+  font-weight: bold;
+  color: #2d6a4f;
+  text-decoration: none;
+  text-transform: uppercase; /* Pentru acel SIGN UP cu majuscule */
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

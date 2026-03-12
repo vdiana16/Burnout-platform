@@ -1,103 +1,165 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, Box, Typography, TextField, Button, 
-  Paper, Alert, MenuItem, FormControl, InputLabel, Select, 
-  FormControlLabel, Radio, RadioGroup, FormLabel 
-} from '@mui/material';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 import api from '../api/axios';
-import { useNavigate } from 'react-router-dom';
+import { Container, Paper, TextField, Button, Typography, Box, Alert, MenuItem } from '@mui/material';
+import '../styles/RegisterPage.css'; 
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    email: '',
-    first_name: '',
+    username: '', 
+    password: '', 
+    first_name: '', 
     last_name: '',
-    role: 'STUDENT',
-    institution_id: ''
+    email: '', 
+    role: 'STUDENT', 
+    institution: ''
   });
+  
   const [institutions, setInstitutions] = useState([]);
   const [error, setError] = useState('');
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchInstitutions = async () => {
       try {
-        const response = await api.get('institutions/');
-        setInstitutions(response.data);
+        const res = await api.get('institutions/');
+        setInstitutions(res.data);
       } catch (err) {
-        console.error("Eroare la incarcarea institutiilor", err);
+        console.error("Eroare la încărcarea instituțiilor:", err);
       }
     };
     fetchInstitutions();
   }, []);
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
-      await api.post('register/', formData);
-      alert("Cont creat! Acum te poti loga.");
-      navigate('/login');
+      // Apelăm funcția din Context
+      await register(formData);
+      
+      // Dacă a ajuns aici, înseamnă că și register și login-ul automat au mers
+      // Îl trimitem direct la Dashboard (sau la /login dacă preferi)
+      navigate('/dashboard'); 
     } catch (err) {
-      setError('Eroare: Verifică dacă datele sunt corecte.');
+      // Aici prinzi erorile de la server (ex: user deja existent)
+      setError(err.response?.data?.message || 'Eroare la înregistrare. Verifică datele.');
     }
   };
 
   return (
-    <Container component="main" maxWidth="sm">
-      <Box sx={{ marginTop: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
-        <Paper elevation={3} sx={{ p: 4, width: '100%', borderRadius: 2 }}>
-          <Typography component="h1" variant="h5" align="center" gutterBottom color="primary" sx={{ fontWeight: 'bold' }}>
+    <div className="register-page">
+      <Container maxWidth="sm">
+        <Paper className="register-paper" elevation={0}>
+          <Typography variant="h4" className="register-title">
             Creează Cont
           </Typography>
+          
+          {error && <Alert severity="error" sx={{ mb: 2, borderRadius: '10px' }}>{error}</Alert>}
 
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <TextField fullWidth label="Prenume" required onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} />
-              <TextField fullWidth label="Nume" required onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} />
+          <form onSubmit={handleSubmit} className="register-form" autocomplete="off">
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField 
+                label="Prenume" 
+                name="first_name" 
+                fullWidth 
+                required 
+                onChange={handleChange} 
+                className="register-input" 
+              />
+              <TextField 
+                label="Nume" 
+                name="last_name" 
+                fullWidth 
+                required 
+                onChange={handleChange} 
+                className="register-input" 
+              />
             </Box>
+            
+            <TextField 
+              label="Utilizator" 
+              name="username" 
+              fullWidth 
+              required 
+              onChange={handleChange} 
+              className="register-input" 
+              autoComplete="off"
+            />
+            
+            <TextField 
+              label="Email" 
+              name="email" 
+              type="email" 
+              fullWidth 
+              required 
+              onChange={handleChange} 
+              className="register-input" 
+            />
+            
+            <TextField 
+              label="Parolă" 
+              name="password" 
+              type="password" 
+              fullWidth 
+              required 
+              onChange={handleChange} 
+              className="register-input"
+              autoComplete="new-password" 
+            />
+            
+            <TextField
+              select
+              label="Instituție"
+              name="institution"
+              fullWidth
+              required
+              value={formData.institution}
+              onChange={handleChange}
+              className="register-input"
+            >
+              {institutions.map((inst) => (
+                <MenuItem key={inst.id} value={inst.id}>
+                  {inst.name}
+                </MenuItem>
+              ))}
+            </TextField>
 
-            <TextField fullWidth label="Utilizator" required sx={{ mb: 2 }} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
-            <TextField fullWidth label="Email" type="email" required sx={{ mb: 2 }} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-            <TextField fullWidth label="Parolă" type="password" required sx={{ mb: 2 }} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+            <TextField
+              select
+              label="Sunt un:"
+              name="role"
+              fullWidth
+              value={formData.role}
+              onChange={handleChange}
+              className="register-input"
+            >
+              <MenuItem value="STUDENT">Student / Elev</MenuItem>
+              <MenuItem value="PSYCHOLOGIST">Psiholog</MenuItem>
+            </TextField>
 
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Instituție</InputLabel>
-              <Select
-                value={formData.institution_id}
-                label="Instituție"
-                onChange={(e) => setFormData({ ...formData, institution_id: e.target.value })}
-                required
-              >
-                {institutions.map((inst) => (
-                  <MenuItem key={inst.id} value={inst.id}>{inst.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl component="fieldset" sx={{ mb: 2 }}>
-              <FormLabel component="legend">Sunt un:</FormLabel>
-              <RadioGroup row value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })}>
-                <FormControlLabel value="STUDENT" control={<Radio />} label="Student/Elev" />
-                <FormControlLabel value="PSYCHOLOGIST" control={<Radio />} label="Psiholog" />
-              </RadioGroup>
-            </FormControl>
-
-            <Button type="submit" fullWidth variant="contained" size="large" sx={{ mt: 2, mb: 2 }}>
-              Finalizare Înregistrare
+            <Button 
+              type="submit" 
+              className="register-button" 
+              fullWidth 
+              variant="contained"
+            >
+              SIGN UP
             </Button>
-
-            <Typography variant="body2" align="center">
-              Ai deja cont? <Button onClick={() => navigate('/login')}>Login</Button>
-            </Typography>
+          </form>
+          
+          <Box className="register-footer">
+            Ai deja cont? <Link to="/login" className="register-link">LOGIN</Link>
           </Box>
         </Paper>
-      </Box>
-    </Container>
+      </Container>
+    </div>
   );
 };
 

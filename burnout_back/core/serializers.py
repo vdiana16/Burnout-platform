@@ -1,6 +1,20 @@
 from rest_framework import serializers
 from .models import User, Institution, PsychologistProfile, StudentProfile, TestResult
 from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['user'] = {
+            'id': self.user.id,
+            'username': self.user.username,
+            'first_name': self.user.first_name,
+            'role': self.user.role, 
+            'institution_name': self.user.institution.name if self.user.institution else "Fără instituție"
+        }
+        return data
+
 
 class InstitutionSerializer(serializers.ModelSerializer):
     class Meta:

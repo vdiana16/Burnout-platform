@@ -1,86 +1,79 @@
-import React, { useState } from 'react';
-import { 
-  Container, Box, Typography, TextField, Button, 
-  Paper, Alert, InputAdornment, IconButton 
-} from '@mui/material';
-import { Visibility, VisibilityOff, Login as LoginIcon } from '@mui/icons-material';
-import api from '../api/axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'; 
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { Container, Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
+import '../styles/LoginPage.css';
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  
+  // 2. Am adăugat isAuthenticated aici pentru a putea fi folosit în useEffect
+  const { login, isAuthenticated } = useAuth(); 
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     try {
-      const response = await api.post('login/', formData);
-      localStorage.setItem('access_token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
+      await login(credentials);
       navigate('/dashboard');
     } catch (err) {
-      setError('Credentiale invalide. Incearca din nou.');
+      setError('Credentiale invalide. Te rugam sa încerci din nou.');
     }
   };
 
+  // Acum useEffect va recunoaște atât funcția, cât și variabila isAuthenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
   return (
-    <Container component="main" maxWidth="xs">
-      <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Paper elevation={3} sx={{ p: 4, width: '100%', borderRadius: 2 }}>
-          <Typography component="h1" variant="h5" align="center" gutterBottom color="primary" sx={{ fontWeight: 'bold' }}>
-            Burnout App - Login
-          </Typography>
+    <div className="login-page">
+      <Container maxWidth="xs">
+        <Paper className="login-paper" elevation={0}>
+          <Typography variant="h4" className="login-title">Burnout App</Typography>
+          <Typography variant="body2" className="login-subtitle">Conectează-te la contul tău</Typography>
           
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
             <TextField
-              margin="normal"
-              required
-              fullWidth
               label="Utilizator"
-              autoFocus
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              name="username"
+              className="login-input"
+              fullWidth
+              required
+              onChange={handleChange}
+              autoComplete="off"
             />
             <TextField
-              margin="normal"
-              required
-              fullWidth
               label="Parolă"
-              type={showPassword ? 'text' : 'password'}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button
-              type="submit"
+              name="password"
+              type="password"
+              className="login-input"
               fullWidth
-              variant="contained"
-              startIcon={<LoginIcon />}
-              sx={{ mt: 3, mb: 2, py: 1.5, textTransform: 'none' }}
-            >
-              Conectare
+              required
+              onChange={handleChange}
+              autoComplete="new-password"
+            />
+            <Button type="submit" className="login-button" fullWidth variant="contained">
+              Login
             </Button>
-            <Typography variant="body2" align="center">
-              Nu ai cont? 
-              <Button onClick={() => navigate('/register')} sx={{ textTransform: 'none' }}>
-                Înregistrează-te
-              </Button>
-            </Typography>
+          </form>
+          
+          <Box className="login-footer">
+            Nu ai un cont? <Link to="/register" className="login-link">SIGN UP</Link>
           </Box>
         </Paper>
-      </Box>
-    </Container>
+      </Container>
+    </div>
   );
 };
 
