@@ -6,15 +6,26 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
+        
+        # Găsim instituția în funcție de rolul utilizatorului
+        institution_name = "Fără instituție"
+        
+        if self.user.role == 'STUDENT' and hasattr(self.user, 'student_profile'):
+            if self.user.student_profile.institution:
+                institution_name = self.user.student_profile.institution.name
+                
+        elif self.user.role == 'PSYCHOLOGIST' and hasattr(self.user, 'psychologist_profile'):
+            if self.user.psychologist_profile.institution:
+                institution_name = self.user.psychologist_profile.institution.name
+
         data['user'] = {
             'id': self.user.id,
             'username': self.user.username,
             'first_name': self.user.first_name,
             'role': self.user.role, 
-            'institution_name': self.user.institution.name if self.user.institution else "Fără instituție"
+            'institution_name': institution_name
         }
         return data
-
 
 class InstitutionSerializer(serializers.ModelSerializer):
     class Meta:
