@@ -7,7 +7,6 @@ export function AuthProvider({ children }) {
   const [accessToken, setAccessToken] = useState(() => localStorage.getItem("access"));
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
-    // Verificăm dacă există și dacă NU este textul "undefined"
     if (storedUser && storedUser !== "undefined") {
       try {
         return JSON.parse(storedUser);
@@ -23,7 +22,6 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     try {
-      // CORECT: Trimitem doar obiectul credentials
       const response = await authApi.login(credentials);
       const { access, refresh, user } = response.data;
 
@@ -46,17 +44,14 @@ export function AuthProvider({ children }) {
 
   const register = async (userData) => {
     try {
-      // 1. Trimitem datele la server pentru creare cont
       await authApi.register(userData);
       
-      // 2. Logăm utilizatorul automat folosind aceleași credențiale
-      // Notă: Folosim login-ul definit mai sus în Context
       await login({ 
         username: userData.username, 
         password: userData.password 
       });
       
-      return true; // Semnalăm succesul
+      return true; 
     } catch (error) {
       console.error("Eroare la înregistrare:", error);
       throw error;

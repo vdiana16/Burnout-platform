@@ -41,14 +41,10 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
     try {
-      // Apelăm funcția din Context
       await register(formData);
       
-      // Dacă a ajuns aici, înseamnă că și register și login-ul automat au mers
-      // Îl trimitem direct la Dashboard (sau la /login dacă preferi)
       navigate('/dashboard'); 
     } catch (err) {
-      // Aici prinzi erorile de la server (ex: user deja existent)
       setError(err.response?.data?.message || 'Eroare la înregistrare. Verifică datele.');
     }
   };

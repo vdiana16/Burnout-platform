@@ -6,7 +6,7 @@ import PsychologistView from './PsychologistView';
 import '../styles/Dashboard.css';
 
 const DashboardPage = () => {
-  const { user } = useAuth(); // Extragem datele utilizatorului
+  const { user } = useAuth();  
 
   return (
     <Container maxWidth="lg" className="dashboard-container">
@@ -19,7 +19,6 @@ const DashboardPage = () => {
         </Typography>
       </Box>
 
-      {/* Randare condiționată în funcție de rol */}
       {user?.role === 'PSYCHOLOGIST' ? (
         <PsychologistView user={user} />
       ) : (

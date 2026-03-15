@@ -8,7 +8,6 @@ const LoginPage = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   
-  // 2. Am adăugat isAuthenticated aici pentru a putea fi folosit în useEffect
   const { login, isAuthenticated } = useAuth(); 
   const navigate = useNavigate();
 
@@ -27,7 +26,6 @@ const LoginPage = () => {
     }
   };
 
-  // Acum useEffect va recunoaște atât funcția, cât și variabila isAuthenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');

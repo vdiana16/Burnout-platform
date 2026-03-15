@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
-import ProtectedLayout from './layout/ProtectedLayout'
+import ProtectedLayout from './layout/ProtectedLayout';
+import QuizPage from './pages/QuizPage';
 
 function App() {
   return (
@@ -14,8 +15,8 @@ function App() {
 
         {/* Rute Protejate */}
         <Route element={<ProtectedLayout />}>
-          {/* Dashboard-ul va fi afișat în locul unde ai pus <Outlet /> în ProtectedLayout */}
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/quiz" element={<QuizPage />} />
         </Route>
 
         {/* Redirecționare automată de la rădăcină către Dashboard */}
