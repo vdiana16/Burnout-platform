@@ -1,46 +1,59 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const QuizPage = () => {
+  const navigate = useNavigate();
+
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // Stare nouă pentru a ști când să afișăm erorile cu roșu
   const [showValidation, setShowValidation] = useState(false);
 
-  // Referințe pentru a putea face scroll automat la întrebările uitate
   const questionRefs = useRef({});
 
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchInitialData = async () => {
       try {
         const token = localStorage.getItem('access'); 
-        const response = await fetch('http://127.0.0.1:8000/api/questions/', {
+        
+        const profileResponse = await fetch('http://127.0.0.1:8000/api/student/profile/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (profileResponse.status === 404) {
+          navigate('/student-profile'); 
+          return; 
+        }
+
+        const questionsResponse = await fetch('http://127.0.0.1:8000/api/questions/', {
           headers: {
             'Authorization': `Bearer ${token}`, 
             'Content-Type': 'application/json'
           }
         });
-        if (!response.ok) throw new Error('Eroare la preluarea întrebărilor.');
-        const data = await response.json();
+        
+        if (!questionsResponse.ok) throw new Error('Eroare la preluarea întrebărilor.');
+        
+        const data = await questionsResponse.json();
         setQuestions(data);
         setLoading(false);
+        
       } catch (err) {
         setError(err.message);
         setLoading(false);
       }
     };
-    fetchQuestions();
-  }, []);
+    
+    fetchInitialData();
+  }, [navigate]);
 
   const handleAnswerChange = (order, value) => {
     setAnswers(prev => ({
       ...prev,
       [`Q${order}`]: value
     }));
-    // Dacă utilizatorul a răspuns la o întrebare cu eroare, ascundem validarea
     if (showValidation) setShowValidation(false);
   };
 
@@ -51,16 +64,14 @@ const QuizPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validare personalizată: Verificăm dacă a răspuns la toate
     if (Object.keys(answers).length < questions.length) {
       setShowValidation(true);
       
-      // Găsim prima întrebare la care nu s-a răspuns și facem scroll la ea
       const firstMissingOrder = questions.find(q => answers[`Q${q.order}`] === undefined)?.order;
       if (firstMissingOrder && questionRefs.current[firstMissingOrder]) {
         questionRefs.current[firstMissingOrder].scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      return; // Oprim trimiterea la server
+      return; 
     }
 
     setLoading(true);

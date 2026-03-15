@@ -42,7 +42,11 @@ class StudentProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentProfile
-        fields = ['id', 'user', 'institution', 'age', 'study_year', 'is_approved']
+        fields = [
+            'id', 'user', 'institution', 'gender', 'age', 
+            'education_level', 'study_stage', 'field', 
+            'academic_gpa', 'financial_stress', 'employment'
+        ]
 
 class PsychologistProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
