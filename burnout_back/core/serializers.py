@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Institution, PsychologistProfile, StudentProfile, TestResult
+from .models import User, Institution, PsychologistProfile, StudentProfile, Question, TestResult
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -7,7 +7,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         
-        # Găsim instituția în funcție de rolul utilizatorului
         institution_name = "Fără instituție"
         
         if self.user.role == 'STUDENT' and hasattr(self.user, 'student_profile'):
@@ -92,3 +91,29 @@ class RegisterSerializer(serializers.ModelSerializer):
             PsychologistProfile.objects.create(user=user, institution=institution)
 
         return user
+    
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ['id', 'order', 'text', 'category', 'is_numeric']
+
+class TestResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestResult
+        fields = ['id', 'responses', 'predicted_cluster', 'taken_at']
+        read_only_fields = ['id', 'predicted_cluster', 'taken_at']
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        user = request.user
+        if not hasattr(user, 'student_profile'):
+            raise serializers.ValidationError("Doar studenții pot trimite teste.")
+        
+        student_profile = user.student_profile
+
+        test_result = TestResult.objects.create(
+            student=student_profile,
+            responses=validated_data['responses']
+        )
+
+        return test_result
