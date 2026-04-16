@@ -45,12 +45,6 @@ export function AuthProvider({ children }) {
   const register = async (userData) => {
     try {
       await authApi.register(userData);
-      
-      await login({ 
-        username: userData.username, 
-        password: userData.password 
-      });
-      
       return true; 
     } catch (error) {
       console.error("Eroare la înregistrare:", error);

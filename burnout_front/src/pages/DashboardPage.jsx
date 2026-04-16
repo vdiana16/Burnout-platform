@@ -1,31 +1,16 @@
 import React from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { Container, Typography, Box } from '@mui/material';
-import StudentView from './StudentView';
-import PsychologistView from './PsychologistView';
-import '../styles/Dashboard.css';
+import StudentDashboardPage from './student/StudentDashboardPage';
+//import ProfessorDashboardPage from './psychologist/PsychologistDashboardPage';
 
 const DashboardPage = () => {
-  const { user } = useAuth();  
+  const { user } = useAuth(); 
 
-  return (
-    <Container maxWidth="lg" className="dashboard-container">
-      <Box sx={{ mb: 4, mt: 2 }}>
-        <Typography variant="h4" className="dashboard-title">
-          Bună, {user?.first_name || 'utilizator'}! 👋
-        </Typography>
-        <Typography variant="body1" className="dashboard-subtitle">
-          Panou de control: <strong>{user?.role === 'PSYCHOLOGIST' ? 'Psiholog' : 'Student'}</strong> la {user?.institution_name || 'Instituția ta'}.
-        </Typography>
-      </Box>
+  if (user?.role === 'psychologist') {
+    //return <ProfessorDashboardPage />;
+  }
 
-      {user?.role === 'PSYCHOLOGIST' ? (
-        <PsychologistView user={user} />
-      ) : (
-        <StudentView user={user} />
-      )}
-    </Container>
-  );
+  return <StudentDashboardPage />;
 };
 
 export default DashboardPage;

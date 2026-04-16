@@ -4,7 +4,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedLayout from './layout/ProtectedLayout';
 import QuizPage from './pages/QuizPage';
-import StudentProfileSetup from './pages/StudentProfileSetup';
+import StudentProfilePage from './pages/student/StudentProfilePage';
 
 function App() {
   return (
@@ -18,7 +18,7 @@ function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/quiz" element={<QuizPage />} />
-          <Route path="/student-profile" element={<StudentProfileSetup />} />
+          <Route path="/student-profile" element={<StudentProfilePage />} />
         </Route>
 
         {/* Redirecționare automată de la rădăcină către Dashboard */}

@@ -49,6 +49,8 @@ class StudentProfile(models.Model):
     financial_stress = models.IntegerField(null=True, blank=True, help_text="1 to 5")
     EMP_CHOICES = (('Nu', 'Nu'), ('Part-time', 'Part-time'), ('Full-time', 'Full-time'))
     employment = models.CharField(max_length=20, choices=EMP_CHOICES, default='Nu')
+    study_hours = models.FloatField(null=True, blank=True, help_text="Ore studiu zilnic")
+    sleep_hours = models.FloatField(null=True, blank=True, help_text="Ore somn pe noapte")
 
     def __str__(self):
         return f"Profil: {self.user.username}"

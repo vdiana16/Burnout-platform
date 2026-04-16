@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import User, Institution, PsychologistProfile, StudentProfile, Question, TestResult
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -61,24 +63,32 @@ class TestResultSerializer(serializers.ModelSerializer):
         model = TestResult
         fields = ['id', 'student', 'taken_at', 'responses', 'predicted_cluster', 'psychologist_notes']
 
-
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    institution_id = serializers.PrimaryKeyRelatedField(
-        queryset=Institution.objects.all(),
-        source='institution',
-        write_only=True,
-        required=False,
-        allow_null=True
+    institution = serializers.PrimaryKeyRelatedField(
+        queryset=Institution.objects.all(), 
+        required=False
     )
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'email', 'first_name', 'last_name', 'role', 'institution_id')
+        fields = ('username', 'password', 'email', 'first_name', 'last_name', 'role', 'institution')
+        extra_kwargs = {'password': {'write_only': True}}
 
-    def create(self, validated_data):
-        institution = validated_data.pop('institution', None)
+    # PASUL 1: Validarea datelor  înainte de a începe salvarea
+    def validate(self, data):
+        password = data.get('password')
         
+        try:
+            validate_password(password)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+            
+        return data
+
+    # PASUL 2: Crearea atomică a utilizatorului și a profilului
+    @transaction.atomic
+    def create(self, validated_data):
+        institution = validated_data.pop('institution', None)        
         user = User.objects.create(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
@@ -90,9 +100,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         if user.role == 'STUDENT':
-            StudentProfile.objects.create(user=user, institution=institution, is_approved=False)
+            StudentProfile.objects.create(
+                user=user, 
+                institution=institution, 
+            )
         elif user.role == 'PSYCHOLOGIST':
-            PsychologistProfile.objects.create(user=user, institution=institution)
+            PsychologistProfile.objects.create(
+                user=user, 
+                institution=institution
+            )
 
         return user
     

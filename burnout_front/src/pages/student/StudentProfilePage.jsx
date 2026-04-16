@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ProfileSetupPage = () => {
+const StudentProfilePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -94,7 +94,8 @@ const ProfileSetupPage = () => {
       <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '15px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h1 style={{ color: '#2E5F8A', margin: '0 0 10px 0' }}>Profilul tău de student 👋</h1>
+          {/* SCHIMBARE AICI: Culoare Verde Principal */}
+          <h1 style={{ color: '#2E8B57', margin: '0 0 10px 0' }}>Profilul tău de student 👋</h1>
           <p style={{ color: '#718096', fontSize: '1.1rem', margin: '0' }}>
             Avem nevoie de câteva detalii pentru a-ți personaliza evaluarea de burnout.
           </p>
@@ -182,7 +183,8 @@ const ProfileSetupPage = () => {
                 {[1, 2, 3, 4, 5].map(num => (
                   <label key={num} style={{ 
                     flex: '1', textAlign: 'center', padding: '10px', 
-                    backgroundColor: formData.financial_stress == num ? '#2E5F8A' : '#edf2f7',
+                    // SCHIMBARE AICI: Verde când e selectat
+                    backgroundColor: formData.financial_stress == num ? '#2E8B57' : '#edf2f7',
                     color: formData.financial_stress == num ? '#fff' : '#4a5568',
                     borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
                   }}>
@@ -201,7 +203,8 @@ const ProfileSetupPage = () => {
                 disabled={loading}
                 style={{ 
                 flex: 2, padding: '16px', fontSize: '1.1rem', fontWeight: 'bold',
-                backgroundColor: loading ? '#cbd5e0' : '#2E5F8A', color: 'white', 
+                // SCHIMBARE AICI: Verde pentru buton
+                backgroundColor: loading ? '#cbd5e0' : '#2E8B57', color: 'white', 
                 border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer',
                 }}
             >
@@ -229,4 +232,4 @@ const ProfileSetupPage = () => {
   );
 };
 
-export default ProfileSetupPage;
+export default StudentProfilePage;

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'; 
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { Container, Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
+import { Container, Paper, TextField, Button, Typography, Box, Alert, IconButton, InputAdornment } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import '../styles/LoginPage.css';
 
 const LoginPage = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const { login, isAuthenticated } = useAuth(); 
   const navigate = useNavigate();
@@ -19,8 +21,24 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     try {
-      await login(credentials);
-      navigate('/dashboard');
+      const user = await login(credentials); 
+      
+      const token = localStorage.getItem('access');
+
+      try {
+        const profileResponse = await fetch('http://127.0.0.1:8000/api/student/profile/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (profileResponse.status === 404) {
+          navigate('/student-profile');
+        } else {
+          navigate('/dashboard');
+        }
+      } catch (profileErr) {
+        navigate('/dashboard');
+      }
+
     } catch (err) {
       setError('Credentiale invalide. Te rugam sa încerci din nou.');
     }
@@ -54,12 +72,24 @@ const LoginPage = () => {
             <TextField
               label="Parolă"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"} 
               className="login-input"
               fullWidth
               required
               onChange={handleChange}
               autoComplete="new-password"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
             />
             <Button type="submit" className="login-button" fullWidth variant="contained">
               Login
