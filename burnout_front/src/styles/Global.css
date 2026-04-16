@@ -1,29 +1,27 @@
 :root {
   --primary-menta: #40916c;
   --primary-hover: #2d6a4f;
+  --primary-dark: #1b4332;
   --bg-gradient: linear-gradient(135deg, #2d6a4f 0%, #95d5b2 100%);
   --card-bg: rgba(255, 255, 255, 0.95);
   --text-title: #1b4332;
   --text-body: #495057;
-  --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   --border-radius: 16px;
+  --navbar-height: 80px; /* Înălțimea standard a Navbar-ului */
 }
 
-/* --- SECTION 2: RESET (Elimină liniile albe) --- */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: #f8faf9; /* O culoare de fallback */
+  background-color: #f8faf9;
   font-family: 'Roboto', sans-serif;
+  color: var(--text-body);
 }
 
-#root {
-  min-height: 100vh;
-}
-
-/* --- SECTION 3: HELPER CLASSES (Opțional) --- */
-.text-mint {
-  color: var(--primary-menta);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

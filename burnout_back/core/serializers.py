@@ -47,7 +47,8 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'institution', 'gender', 'age', 
             'education_level', 'study_stage', 'field', 
-            'academic_gpa', 'financial_stress', 'employment'
+            'academic_gpa', 'financial_stress', 'employment',
+            'study_hours', 'sleep_hours'  
         ]
 
 class PsychologistProfileSerializer(serializers.ModelSerializer):

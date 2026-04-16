@@ -53,8 +53,8 @@ class SubmitTestView(generics.CreateAPIView):
 
         study_hours = get_val(15)
         sleep_hours = get_val(20)
+        financial_stress = get_val(7)
 
-        # Mapări demografice
         edu_map = {'Liceu': 1, 'Licență': 2, 'Master': 3, 'Doctorat': 4}
         emp_map = {'Nu': 0, 'Part-time': 1, 'Full-time': 2}
         
@@ -63,7 +63,6 @@ class SubmitTestView(generics.CreateAPIView):
         age = profile.age if profile.age else 21
         academic_gpa = profile.academic_gpa if profile.academic_gpa else 8.0
 
-        # Exact ordinea din scriptul de ML
         feature_names = [
             'interest_motivation', 'satisfaction_recognition', 'procrastination_score', 
             'organization_score', 'sleep_quality_score', 'sleep_difficulty_score', 
@@ -96,7 +95,6 @@ class SubmitTestView(generics.CreateAPIView):
             'academic_gpa': academic_gpa
         }
 
-        # Creăm DataFrame-ul pe care îl așteaptă modelul
         df_pred = pd.DataFrame([data_dict], columns=feature_names)
 
         X_scaled = scaler.transform(df_pred)

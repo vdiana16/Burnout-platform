@@ -6,14 +6,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         questions = [
+            {"order": 7, "text": "Cât de des te îngrijorezi din cauza banilor/cheltuielilor lunare?", "ml_feature_name": "financial_stress", "is_numeric": False, "is_reverse": False},
             {"order": 9, "text": "În ce măsură ești interesat(ă)/pasionat(ă) de domeniul pe care îl studiezi?", "ml_feature_name": "interest_motivation", "is_numeric": False, "is_reverse": False},
             {"order": 10, "text": "Sunt mulțumit(ă) de performanța mea academică din ultima perioadă.", "ml_feature_name": "satisfaction_recognition", "is_numeric": False, "is_reverse": False},
             {"order": 12, "text": "Sunt motivat(ă) să îmi continui studiile în acest domeniu.", "ml_feature_name": "interest_motivation", "is_numeric": False, "is_reverse": False},
             {"order": 13, "text": "Primesc feedback constructiv și util din partea profesorilor.", "ml_feature_name": "satisfaction_recognition", "is_numeric": False, "is_reverse": False},
             {"order": 14, "text": "Simt că efortul meu academic este recunoscut și apreciat.", "ml_feature_name": "satisfaction_recognition", "is_numeric": False, "is_reverse": False},
+            {"order": 15, "text": "Câte ore pe zi dedici studiului individual (în medie)?", "ml_feature_name": "study_hours", "is_numeric": True, "is_reverse": False},
             {"order": 16, "text": "Cât de des amâni task-urile academice importante?", "ml_feature_name": "procrastination_score", "is_numeric": False, "is_reverse": False},
             {"order": 17, "text": "Cât de des studiezi în ultima clipă pentru examene?", "ml_feature_name": "procrastination_score", "is_numeric": False, "is_reverse": False},
             {"order": 18, "text": "Am un program de studiu bine organizat și structurat.", "ml_feature_name": "organization_score", "is_numeric": False, "is_reverse": False},
+            {"order": 20, "text": "Câte ore dormi în medie pe noapte?", "ml_feature_name": "sleep_hours", "is_numeric": True, "is_reverse": False},
             {"order": 21, "text": "Cât de odihnit(ă) te simți dimineața?", "ml_feature_name": "sleep_quality_score", "is_numeric": False, "is_reverse": False},
             {"order": 22, "text": "Cât de des ai dificultăți în a adormi din cauza gândurilor legate de școală/facultate?", "ml_feature_name": "sleep_difficulty_score", "is_numeric": False, "is_reverse": False},
             {"order": 23, "text": "Calitatea somnului tău în ultimele două săptămâni a fost:", "ml_feature_name": "sleep_quality_score", "is_numeric": False, "is_reverse": False},
@@ -37,7 +40,6 @@ class Command(BaseCommand):
             {"order": 41, "text": "În ultima săptămână, m-am simțit trist(ă), deprimat(ă) sau fără speranță.", "ml_feature_name": "stress_negative_affect", "is_numeric": False, "is_reverse": False},
         ]
 
-        # update_or_create asigură că, dacă rulezi comanda de 2 ori, nu dublează întrebările
         for q in questions:
             Question.objects.update_or_create(
                 order=q['order'],

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../auth/AuthContext'; 
 
 const StudentDashboardPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
 
   const colors = {
     primary: '#2E8B57',    
@@ -32,15 +36,42 @@ const StudentDashboardPage = () => {
         setLoading(false);
       }
     };
+    
+    const checkProfile = async () => {
+        try {
+            const token = localStorage.getItem('access');
+            const response = await fetch('http://127.0.0.1:8000/api/student/profile/', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.age && data.academic_gpa) {
+                    setIsProfileComplete(true);
+                }
+            }
+        } catch (err) {
+            console.error("Eroare verificare profil.");
+        }
+    }
+
     fetchResults();
+    checkProfile();
   }, []);
+
+  const handleStartQuiz = () => {
+      if (!isProfileComplete) {
+          alert("Te rugăm să îți completezi profilul academic înainte de a da primul test!");
+          navigate('/student-profile');
+      } else {
+          navigate('/quiz');
+      }
+  };
 
   const lastResult = results.length > 0 ? results[0] : null;
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1100px', margin: '0 auto', color: colors.text }}>
       
-      {/* 1. HEADER / BANNER */}
       <div style={{ 
         background: `linear-gradient(135deg, ${colors.primary} 0%, #66bb6a 100%)`,
         borderRadius: '24px', padding: '40px', color: 'white',
@@ -49,12 +80,14 @@ const StudentDashboardPage = () => {
         marginBottom: '40px'
       }}>
         <div style={{ maxWidth: '60%' }}>
-          <h1 style={{ fontSize: '2.2rem', marginBottom: '10px' }}>Salutare! 👋</h1>
+          <h1 style={{ fontSize: '2.2rem', marginBottom: '10px' }}>
+             Salutare, {user?.first_name || 'Student'}! 👋
+          </h1>
           <p style={{ fontSize: '1.1rem', opacity: 0.9 }}>
             Monitorizarea constantă este cheia succesului academic fără burnout.
           </p>
           <button 
-            onClick={() => navigate('/quiz')}
+            onClick={handleStartQuiz}
             style={{ 
               marginTop: '25px', padding: '14px 28px', borderRadius: '12px', border: 'none',
               backgroundColor: 'white', color: colors.primary, fontWeight: 'bold',
