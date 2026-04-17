@@ -121,8 +121,8 @@ class QuestionSerializer(serializers.ModelSerializer):
 class TestResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestResult
-        fields = ['id', 'responses', 'predicted_cluster', 'taken_at']
-        read_only_fields = ['id', 'predicted_cluster', 'taken_at']
+        fields = ['id', 'responses', 'predicted_cluster', 'taken_at', 'psychologist_notes']
+        read_only_fields = ['id', 'predicted_cluster', 'taken_at', 'psychologist_notes']
 
     def create(self, validated_data):
         request = self.context.get('request')
