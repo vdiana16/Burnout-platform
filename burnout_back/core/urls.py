@@ -4,10 +4,17 @@ from .views.testsView import QuestionListView, SubmitTestView, ResultsView
 from .views.profilesView import StudentProfileView
 
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name='register'),
+    # --- AUTH & USERS ---
+    path('auth/register/', RegisterView.as_view(), name='register'),
     path('institutions/', InstitutionListView.as_view(), name='institution_list'),
+    
+    # --- STUDENT PROFILE ---
+    path('students/me/', StudentProfileView.as_view(), name='student-profile'), 
+    
+    # --- EVALUĂRI / TESTE ---
     path('questions/', QuestionListView.as_view(), name='questions-list'),
-    path('test-submit/', SubmitTestView.as_view(), name='test-submit'),
-    path('student/profile/', StudentProfileView.as_view(), name='student-profile'),
-    path('my-results/', ResultsView.as_view(), name='my-results'),
+    
+    # Aici folosim aceeași resursă (tests), dar face lucruri diferite în funcție de metoda HTTP (GET vs POST)
+    path('tests/', ResultsView.as_view(), name='test-list'), # GET: aduce istoricul
+    path('tests/submit/', SubmitTestView.as_view(), name='test-submit'), # POST: trimite un test nou
 ]

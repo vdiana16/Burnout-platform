@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from core.models import Question, TestResult
 from core.serializers import QuestionSerializer, TestResultSerializer
 
-
+# Incarcare modele ML
 ML_MODELS_DIR = os.path.join(settings.BASE_DIR, 'core', 'ml_models')
 xgb_model = joblib.load(os.path.join(ML_MODELS_DIR, 'xgboost_burnout_model.pkl'))
 scaler = joblib.load(os.path.join(ML_MODELS_DIR, 'scaler.pkl'))
@@ -30,12 +30,22 @@ class SubmitTestView(generics.CreateAPIView):
             return Response({"error": "Doar studenții pot face acest test."}, status=status.HTTP_400_BAD_REQUEST)
         
         profile = user.student_profile
+        
+        # Extragem lista de raspunsuri din request
         responses = request.data.get('responses', {})
+        if not responses or len(responses) < 31:  
+            return Response(
+                {"error": "Date incomplete. Te rugăm să răspunzi la toate întrebările."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+
+        # Functie helper pentru a extrage valori din lista de obiecte [{question_order, value}, ...]
         def get_val(q_num):
-            return float(responses.get(f"Q{q_num}", 3))
+            # Caută cheia "Q9", "Q10" etc. direct în dicționar. Dacă nu există, returnează 3.0
+            return float(responses.get(f"Q{q_num}", 3.0))
 
-        # --- Extragem exclusiv cele 20 de variabile pentru Modelul 3 ---
+        # --- Calcule pentru Modelul ML ---
         interest_motivation = (get_val(9) + get_val(12)) / 2
         satisfaction_recognition = (get_val(10) + get_val(13) + get_val(14)) / 3
         procrastination_score = (get_val(16) + get_val(17)) / 2
@@ -53,8 +63,15 @@ class SubmitTestView(generics.CreateAPIView):
 
         study_hours = get_val(15)
         sleep_hours = get_val(20)
+        
+        # --- Gestionare Stres Financiar (Q7) ---
         financial_stress = get_val(7)
+        profile.financial_stress = int(financial_stress)
+        profile.study_hours = study_hours
+        profile.sleep_hours = sleep_hours
+        profile.save() # Salveaza datele dinamice pe profil pentru psiholog
 
+        # --- Pregatire date pentru Predictie ---
         edu_map = {'Liceu': 1, 'Licență': 2, 'Master': 3, 'Doctorat': 4}
         emp_map = {'Nu': 0, 'Part-time': 1, 'Full-time': 2}
         
@@ -96,15 +113,15 @@ class SubmitTestView(generics.CreateAPIView):
         }
 
         df_pred = pd.DataFrame([data_dict], columns=feature_names)
-
         X_scaled = scaler.transform(df_pred)
         prediction_encoded = xgb_model.predict(X_scaled)
-        
         final_cluster = label_encoder.inverse_transform(prediction_encoded)[0]
 
+        # --- Salvare Rezultat Test ---
+        # AICI am corectat responses=responses_list
         test_result = TestResult.objects.create(
             student=profile,
-            responses=responses,
+            responses=responses, 
             predicted_cluster=final_cluster
         )
 

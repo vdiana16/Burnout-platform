@@ -6,7 +6,7 @@ export const authApi = {
   },
 
   register: (userData) => {
-    return api.post("register/", userData);
+    return api.post("auth/register/", userData);
   },
 
   logout: () => {

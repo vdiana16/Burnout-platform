@@ -24,7 +24,7 @@ const StudentProfilePage = () => {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem('access');
-                const response = await api.get('/student/profile/', {
+                const response = await api.get('/students/me/', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -59,7 +59,7 @@ const StudentProfilePage = () => {
         try {
             const token = localStorage.getItem('access'); 
             
-            await api.patch('/student/profile/', formData, {
+            await api.patch('/students/me/', formData, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             

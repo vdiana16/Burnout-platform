@@ -20,7 +20,7 @@ const QuizPage = () => {
         const token = localStorage.getItem('access'); 
         
         // 1. Verificăm Profilul
-        const profileResponse = await fetch('http://127.0.0.1:8000/api/student/profile/', {
+        const profileResponse = await fetch('http://127.0.0.1:8000/api/student/me/', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -78,12 +78,15 @@ const QuizPage = () => {
 
     try {
       const token = localStorage.getItem('access');
+      const formattedResponses = questions.reduce((acc, q) => {
+        acc[`Q${q.order}`] = answers[q.order];
+        return acc;
+      }, {});
+
       const payload = {
-        responses: questions.map(q => ({
-          question_order: q.order,
-          value: answers[q.order]
-        }))
+        responses: formattedResponses
       };
+      console.log("Datele care pleacă spre backend:", payload);
 
       const submitResponse = await fetch('http://127.0.0.1:8000/api/tests/submit/', {
         method: 'POST',
@@ -130,7 +133,6 @@ const QuizPage = () => {
     return { title: "📌 Alte Întrebări", color: "#f7fafc", borderColor: "#718096" };
   };
 
-  // Grupăm întrebările efectiv într-un obiect
   const groupedQuestions = questions.reduce((acc, q) => {
     const section = getSectionInfo(q.order);
     if (!acc[section.title]) {
@@ -139,19 +141,84 @@ const QuizPage = () => {
     acc[section.title].questions.push(q);
     return acc;
   }, {});
+
+  const getClusterInfo = (clusterName) => {
+    const name = clusterName.toLowerCase();
+    
+    // Personalizează aceste cuvinte cheie în funcție de cum se numesc clusterele tale din Python
+    if (name.includes('ridicat') || name.includes('sever') || name.includes('epuizare')) {
+      return { color: '#e53e3e', bg: '#fff5f5', icon: '🚨', message: 'Nivelul tău de stres pare să fie destul de ridicat. Îți recomandăm să iei o pauză și să consulți sfaturile din dashboard.' };
+    }
+    if (name.includes('moderat') || name.includes('mediu') || name.includes('risc')) {
+      return { color: '#dd6b20', bg: '#fffaf0', icon: '⚠️', message: 'Ești pe o pantă ascendentă a stresului. Încearcă să îți reglezi programul de somn și de studiu.' };
+    }
+    if (name.includes('scăzut') || name.includes('fără') || name.includes('optim') || name.includes('echilibrat')) {
+      return { color: '#38a169', bg: '#f0fff4', icon: '🌿', message: 'Felicitări! Gestionezi bine stresul și ai un echilibru sănătos între facultate și viața personală.' };
+    }
+    
+    // Design default dacă numele clusterului nu se potrivește cu cele de sus
+    return { color: '#3182ce', bg: '#ebf8ff', icon: '📊', message: 'Acesta este profilul tău actual. Verifică sfaturile personalizate pregătite pentru tine.' };
+  };
+
   // --------------------------------
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#2E8B57' }}><h3>Se încarcă evaluarea...</h3></div>;
   if (error) return <div style={{ textAlign: 'center', color: '#e53e3e', padding: '50px' }}><h3>{error}</h3></div>;
 
   if (result) {
+    const clusterInfo = getClusterInfo(result);
+
     return (
-      <div className="quiz-result-container">
-         {/* ... (Păstrează HTML-ul de Result neschimbat) ... */}
-         <h2 style={{ color: '#2E8B57', marginBottom: '10px' }}>Evaluare Finalizată!</h2>
-         <div style={{ padding: '30px', backgroundColor: 'white', borderRadius: '15px' }}>
-             <h1>{result}</h1>
-         </div>
+      <div style={{ backgroundColor: '#f8faf9', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '20px',
+          padding: '50px 40px',
+          maxWidth: '500px',
+          width: '100%',
+          textAlign: 'center',
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.05)',
+          borderTop: `8px solid ${clusterInfo.color}`
+        }}>
+          
+          <div style={{ fontSize: '4rem', marginBottom: '15px' }}>{clusterInfo.icon}</div>
+          <h2 style={{ color: '#2d3748', marginBottom: '10px', fontSize: '1.6rem' }}>Rezultatul Evaluării</h2>
+          
+          <div style={{ 
+            backgroundColor: clusterInfo.bg, 
+            color: clusterInfo.color, 
+            padding: '20px', 
+            borderRadius: '12px', 
+            margin: '25px 0',
+            fontWeight: 'bold',
+            fontSize: '1.8rem',
+            border: `1px solid ${clusterInfo.color}40` 
+          }}>
+            {result}
+          </div>
+
+          <p style={{ color: '#4a5568', fontSize: '1.1rem', marginBottom: '40px', lineHeight: '1.6' }}>
+            {clusterInfo.message}
+          </p>
+
+          <button 
+            onClick={() => navigate('/student/profile/')} 
+            style={{
+              backgroundColor: '#2E8B57',
+              color: 'white',
+              padding: '16px 30px',
+              border: 'none',
+              borderRadius: '30px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              width: '100%',
+              boxShadow: '0 4px 6px rgba(46, 139, 87, 0.2)',
+            }}
+          >
+            ÎNTOARCE-TE LA DASHBOARD
+          </button>
+        </div>
       </div>
     );
   }

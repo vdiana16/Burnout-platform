@@ -23,7 +23,8 @@ const StudentDashboardPage = () => {
     const fetchResults = async () => {
       try {
         const token = localStorage.getItem('access');
-        const response = await fetch('http://127.0.0.1:8000/api/my-results/', {
+        // Am păstrat ruta 'tests/', asigură-te că așa este și în backend dacă ai făcut modificările RESTful
+        const response = await fetch('http://127.0.0.1:8000/api/tests/', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -40,11 +41,12 @@ const StudentDashboardPage = () => {
     const checkProfile = async () => {
         try {
             const token = localStorage.getItem('access');
-            const response = await fetch('http://127.0.0.1:8000/api/student/profile/', {
+            const response = await fetch('http://127.0.0.1:8000/api/students/me/', {
               headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
                 const data = await response.json();
+                console.log("Date profil din backend:", data);
                 if (data.age && data.academic_gpa) {
                     setIsProfileComplete(true);
                 }
@@ -61,7 +63,7 @@ const StudentDashboardPage = () => {
   const handleStartQuiz = () => {
       if (!isProfileComplete) {
           alert("Te rugăm să îți completezi profilul academic înainte de a da primul test!");
-          navigate('/student-profile');
+          navigate('/students/me');
       } else {
           navigate('/quiz');
       }
@@ -72,8 +74,9 @@ const StudentDashboardPage = () => {
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1100px', margin: '0 auto', color: colors.text }}>
       
+      {/* 1. HERO BANNER (Unificat) */}
       <div style={{ 
-        background: `linear-gradient(135deg, ${colors.primary} 0%, #66bb6a 100%)`,
+        background: `linear-gradient(135deg, ${colors.primary} 0%, #1b4332 100%)`,
         borderRadius: '24px', padding: '40px', color: 'white',
         boxShadow: '0 10px 25px rgba(46, 139, 87, 0.2)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -89,14 +92,14 @@ const StudentDashboardPage = () => {
           <button 
             onClick={handleStartQuiz}
             style={{ 
-              marginTop: '25px', padding: '14px 28px', borderRadius: '12px', border: 'none',
+              marginTop: '25px', padding: '14px 28px', borderRadius: '30px', border: 'none',
               backgroundColor: 'white', color: colors.primary, fontWeight: 'bold',
               cursor: 'pointer', fontSize: '1rem', transition: 'transform 0.2s'
             }}
             onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
             onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
           >
-            {lastResult ? "Efectuează o nouă evaluare" : "Începe prima evaluare"}
+            {lastResult ? "EFECTUEAZĂ O NOUĂ EVALUARE" : "ÎNCEPE PRIMA EVALUARE"}
           </button>
         </div>
         <div style={{ fontSize: '6rem', opacity: 0.2 }}>🌱</div>

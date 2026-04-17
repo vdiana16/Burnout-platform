@@ -26,7 +26,7 @@ const LoginPage = () => {
       const token = localStorage.getItem('access');
 
       try {
-        const profileResponse = await fetch('http://127.0.0.1:8000/api/student/profile/', {
+        const profileResponse = await fetch('http://127.0.0.1:8000/api/students/me/', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
