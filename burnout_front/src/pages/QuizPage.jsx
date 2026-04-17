@@ -20,7 +20,7 @@ const QuizPage = () => {
         const token = localStorage.getItem('access'); 
         
         // 1. Verificăm Profilul
-        const profileResponse = await fetch('http://127.0.0.1:8000/api/student/me/', {
+        const profileResponse = await fetch('http://127.0.0.1:8000/api/students/me/', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -202,7 +202,7 @@ const QuizPage = () => {
           </p>
 
           <button 
-            onClick={() => navigate('/student/profile/')} 
+            onClick={() => navigate('/students/me/')} 
             style={{
               backgroundColor: '#2E8B57',
               color: 'white',
