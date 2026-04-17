@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage';
 import ProtectedLayout from './layout/ProtectedLayout';
 import QuizPage from './pages/QuizPage';
 import StudentProfilePage from './pages/student/StudentProfilePage';
+import PsychologistProfilePage from './pages/psychologist/PsychologistProfilePage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route path="/student-profile" element={<StudentProfilePage />} />
+          <Route path="/psychologist-profile" element={<PsychologistProfilePage />} />
         </Route>
 
         {/* Redirecționare automată de la rădăcină către Dashboard */}

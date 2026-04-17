@@ -59,11 +59,6 @@ class PsychologistProfileSerializer(serializers.ModelSerializer):
         model = PsychologistProfile
         fields = ['id', 'user', 'institution']
 
-class TestResultSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TestResult
-        fields = ['id', 'student', 'taken_at', 'responses', 'predicted_cluster', 'psychologist_notes']
-
 class RegisterSerializer(serializers.ModelSerializer):
     institution = serializers.PrimaryKeyRelatedField(
         queryset=Institution.objects.all(), 

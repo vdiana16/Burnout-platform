@@ -21,26 +21,41 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     try {
-      const user = await login(credentials); 
-      
+      // 1. Așteptăm login-ul și salvăm datele user-ului returnat
+      const loggedInUser = await login(credentials); 
       const token = localStorage.getItem('access');
+      
+      // 2. Extragem rolul (îl facem litere mici pentru siguranță)
+      const role = loggedInUser?.role?.toLowerCase();
+
+      // 3. Stabilim URL-ul de API și pagina de redirecționare în funcție de rol
+      const isPsychologist = role === 'psychologist';
+      const profileApiUrl = isPsychologist 
+        ? 'http://127.0.0.1:8000/api/psychologists/me/' 
+        : 'http://127.0.0.1:8000/api/students/me/';
+      
+      const profileRoute = isPsychologist ? '/psychologist-profile' : '/student-profile';
 
       try {
-        const profileResponse = await fetch('http://127.0.0.1:8000/api/students/me/', {
+        // 4. Verificăm dacă profilul specific rolului există
+        const profileResponse = await fetch(profileApiUrl, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (profileResponse.status === 404) {
-          navigate('/student-profile');
+          // Dacă nu există profil (404), îl trimitem să îl completeze
+          navigate(profileRoute);
         } else {
+          // Dacă profilul există (200 OK), mergem la dashboard-ul principal
           navigate('/dashboard');
         }
       } catch (profileErr) {
+        // Dacă eroarea este de altă natură, mergem oricum la dashboard
         navigate('/dashboard');
       }
 
     } catch (err) {
-      setError('Credentiale invalide. Te rugam sa încerci din nou.');
+      setError('Credențiale invalide. Te rugăm să încerci din nou.');
     }
   };
 

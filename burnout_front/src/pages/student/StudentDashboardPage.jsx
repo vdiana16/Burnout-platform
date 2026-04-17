@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext'; 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+// Am adăugat componentele pentru Radar Chart
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis 
+} from 'recharts';
 
 const StudentDashboardPage = () => {
   const navigate = useNavigate();
@@ -17,7 +21,10 @@ const StudentDashboardPage = () => {
     text: '#2d3748',
     danger: '#e53e3e',
     warning: '#ed8936',
-    success: '#38a169'
+    success: '#38a169',
+    info: '#3182ce',
+    radarFill: '#9f7aea', // Culoare pentru radar
+    radarStroke: '#6b46c1'
   };
 
   useEffect(() => {
@@ -70,6 +77,7 @@ const StudentDashboardPage = () => {
 
   const lastResult = results.length > 0 ? results[0] : null;
 
+  // --- PREGĂTIRE DATE LINE CHART (EVOLUȚIE) ---
   const chartData = [...results].reverse().map(res => {
     let score = 1; 
     const cluster = res.predicted_cluster.toLowerCase();
@@ -104,6 +112,36 @@ const StudentDashboardPage = () => {
     }
     return null;
   };
+
+  // --- PREGĂTIRE DATE RADAR CHART (FACTORI DE STRES) ---
+  const getRadarData = (responses) => {
+    if (!responses) return [];
+
+    // Funcție robustă care suportă atât Dicționar (nou) cât și Listă (teste vechi din baza de date)
+    const getVal = (qNum) => {
+        if (Array.isArray(responses)) {
+            const item = responses.find(r => r.question_order === qNum);
+            return item && item.value ? parseFloat(item.value) : 3;
+        } else {
+            return parseFloat(responses[`Q${qNum}`] || 3);
+        }
+    };
+
+    // Calculăm mediile exact ca în Backend pentru Modelul XGBoost
+    return [
+        { factor: 'Procrastinare', scor: (getVal(16) + getVal(17)) / 2 },
+        { factor: 'Stres Digital', scor: (getVal(28) + getVal(29)) / 2 },
+        { factor: 'Perfecționism', scor: (getVal(33) + getVal(34) + getVal(35)) / 3 },
+        { factor: 'Autocritică', scor: getVal(39) },
+        { factor: 'Izolare', scor: getVal(38) },
+        { factor: 'Lipsă Somn', scor: getVal(22) }
+    ];
+  };
+
+  const radarData = lastResult ? getRadarData(lastResult.responses) : [];
+  // Găsim dinamic care este cel mai mare scor pentru a oferi un feedback inteligent
+  const topFactor = radarData.length > 0 ? radarData.reduce((prev, current) => (prev.scor > current.scor) ? prev : current) : null;
+
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1000px', margin: '0 auto', color: colors.text }}>
@@ -140,7 +178,7 @@ const StudentDashboardPage = () => {
         <div style={{ fontSize: '7rem', opacity: 0.15 }}>🌿</div>
       </div>
 
-      {/* 2. STATUS CURENT (Acum pe linie separată) */}
+      {/* 2. STATUS CURENT */}
       <div style={{ 
         backgroundColor: 'white', padding: '25px 40px', borderRadius: '24px', 
         boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8',
@@ -165,52 +203,75 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 3. GRAFIC EVOLUȚIE (Pe linie separată, mai mare) */}
-      <div style={{ 
-        backgroundColor: 'white', padding: '30px', borderRadius: '24px', 
-        boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8',
-        marginBottom: '40px'
-      }}>
-        <h3 style={{ marginTop: 0, marginBottom: '30px', fontSize: '1.2rem', fontWeight: '700' }}>Evoluția Nivelului de Stres</h3>
+      {/* 3. FEEDBACK PSIHOLOG */}
+      {lastResult && lastResult.psychologist_notes && (
+        <div style={{ 
+          backgroundColor: '#ebf8ff', padding: '25px 40px', borderRadius: '24px', 
+          boxShadow: '0 4px 20px rgba(49, 130, 206, 0.1)', border: '1px solid #bee3f8',
+          display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '30px'
+        }}>
+          <div style={{ fontSize: '2rem' }}>💬</div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1rem', color: '#2b6cb0', textTransform: 'uppercase', letterSpacing: '1px' }}>Mesaj de la Psiholog</h3>
+            <p style={{ fontSize: '1.1rem', color: '#2c5282', margin: '10px 0 0 0', lineHeight: '1.6', fontStyle: 'italic', fontWeight: '500' }}>
+              "{lastResult.psychologist_notes}"
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 4. ANALIZĂ DETALIATĂ (RADAR CHART) - NOU! */}
+      {lastResult && radarData.length > 0 && (
+        <div style={{ marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '1.4rem', marginBottom: '20px', fontWeight: '800' }}>Amprenta Factorilor de Risc</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px' }}>
+            
+            {/* Partea Stângă - Graficul */}
+            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
+                  <PolarGrid stroke="#e2e8f0" />
+                  <PolarAngleAxis dataKey="factor" tick={{ fill: '#4a5568', fontSize: 12, fontWeight: 600 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
+                  <Radar name="Scor Stres (1-5)" dataKey="scor" stroke={colors.radarStroke} fill={colors.radarFill} fillOpacity={0.5} />
+                  <Tooltip />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Partea Dreaptă - Insight-uri generate automat */}
+            <div style={{ backgroundColor: '#faf5ff', padding: '30px', borderRadius: '24px', border: '1px solid #e9d8fd', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <h4 style={{ margin: '0 0 15px 0', fontSize: '1.2rem', color: '#6b46c1' }}>Atenție la:</h4>
+              <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🎯</div>
+              <p style={{ fontSize: '1.1rem', margin: '0 0 10px 0', color: '#4a5568' }}>
+                Pe baza ultimului tău test, se pare că <strong>{topFactor?.factor}</strong> a fost cel mai mare factor de presiune (Scor: {topFactor?.scor.toFixed(1)} / 5).
+              </p>
+              <p style={{ fontSize: '0.95rem', color: '#718096', margin: 0, lineHeight: '1.5' }}>
+                Graficul radar de alături îți arată zonele tale sensibile. Cu cât forma mov este mai întinsă spre exterior, cu atât nivelul de stres în acea arie este mai ridicat.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* 5. GRAFIC EVOLUȚIE (LINE CHART) */}
+      <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8', marginBottom: '40px' }}>
+        <h3 style={{ marginTop: 0, marginBottom: '30px', fontSize: '1.2rem', fontWeight: '700' }}>Evoluția Generală în Timp</h3>
         
         {results.length > 1 ? (
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={chartData} margin={{ top: 10, right: 30, bottom: 20, left: 10 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f4f8" />
-              <XAxis 
-                dataKey="date" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#a0aec0', fontSize: 11 }} 
-                dy={15}
-                padding={{ left: 20, right: 20 }}
-              />
-              <YAxis 
-                domain={[0.5, 3.5]} 
-                ticks={[1, 2, 3]} 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#a0aec0', fontSize: 12, fontWeight: 'bold' }}
-                tickFormatter={(value) => {
+              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#a0aec0', fontSize: 11 }} dy={15} padding={{ left: 20, right: 20 }} />
+              <YAxis domain={[0.5, 3.5]} ticks={[1, 2, 3]} axisLine={false} tickLine={false} tick={{ fill: '#a0aec0', fontSize: 12, fontWeight: 'bold' }} tickFormatter={(value) => {
                   if (value === 3) return "RIDICAT";
                   if (value === 2) return "MODERAT";
                   if (value === 1) return "SCĂZUT";
                   return "";
-                }}
-              />
-              <Tooltip 
-                content={<CustomTooltip />} 
-                cursor={{ stroke: '#edf2f7', strokeWidth: 2 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="nivel" 
-                stroke={colors.primary} 
-                strokeWidth={5} 
-                dot={{ r: 7, fill: 'white', strokeWidth: 3, stroke: colors.primary }} 
-                activeDot={{ r: 10, fill: colors.primary, stroke: 'white', strokeWidth: 4 }}
-                animationDuration={1800}
-              />
+                }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#edf2f7', strokeWidth: 2 }} />
+              <Line type="monotone" dataKey="nivel" stroke={colors.primary} strokeWidth={5} dot={{ r: 7, fill: 'white', strokeWidth: 3, stroke: colors.primary }} activeDot={{ r: 10, fill: colors.primary, stroke: 'white', strokeWidth: 4 }} animationDuration={1800} />
             </LineChart>
           </ResponsiveContainer>
         ) : (
@@ -223,7 +284,7 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 4. RECOMANDĂRI */}
+      {/* 6. RECOMANDĂRI */}
       <div>
         <h2 style={{ fontSize: '1.6rem', marginBottom: '25px', fontWeight: '800' }}>Recomandări pentru Tine</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>

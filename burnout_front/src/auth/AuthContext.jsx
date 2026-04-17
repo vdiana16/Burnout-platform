@@ -31,6 +31,7 @@ export function AuthProvider({ children }) {
 
       setAccessToken(access);
       setUser(user);
+      return user;
     } catch (error) {
       throw error;
     }
