@@ -22,10 +22,15 @@ class User(AbstractUser):
 
 class PsychologistProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='psychologist_profile')
-    institution = models.ForeignKey(Institution, on_delete=models.SET_NULL, null=True, blank=True, related_name='psychologists')
+    institution = models.ForeignKey(Institution, on_delete=models.SET_NULL, null=True, blank=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    specialization = models.CharField(max_length=100, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+    office_location = models.CharField(max_length=255, blank=True, null=True)
+    title = models.CharField(max_length=100, blank=True, null=True) # ex: Psiholog Clinician
 
     def __str__(self):
-        return f"Dr. {self.user.last_name}"
+        return f"Psychologist: {self.user.username}"
 
 class StudentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')

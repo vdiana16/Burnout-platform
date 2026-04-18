@@ -1,7 +1,7 @@
 from django.urls import path
 from .views.authView import RegisterView, InstitutionListView
 from .views.testsView import QuestionListView, SubmitTestView, ResultsView
-from .views.profilesView import StudentProfileView, PsychologistProfileView
+from .views.profilesView import StudentProfileView, PsychologistProfileView, PsychologistStudentsView
 
 urlpatterns = [
     # --- AUTH & USERS ---
@@ -20,5 +20,6 @@ urlpatterns = [
 
     # --- PSYCHOLOGIST PROFILE
     path('psychologists/me/', PsychologistProfileView.as_view(), name='psychologist-profile'),
+    path('psychologist/students/', PsychologistStudentsView.as_view(), name='psychologist-students'),
 
 ]

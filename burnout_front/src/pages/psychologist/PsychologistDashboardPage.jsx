@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../api/axios';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
@@ -16,7 +15,6 @@ const PsychologistDashboardPage = () => {
     danger: '#e53e3e',
     warning: '#ed8936',
     success: '#38a169',
-    bg: '#f7fafc',
     text: '#2d3748'
   };
 
@@ -26,11 +24,17 @@ const PsychologistDashboardPage = () => {
 
   const fetchStudents = async () => {
     try {
-      const response = await api.get('/psychologist/students/');
-      setStudents(response.data);
+      const token = localStorage.getItem('access');
+      const response = await fetch('http://127.0.0.1:8000/api/psychologist/students/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setStudents(data);
+      }
       setLoading(false);
     } catch (err) {
-      console.error("Eroare la încărcarea listei de studenți.");
+      console.error("Eroare la încărcarea listei de studenți.", err);
       setLoading(false);
     }
   };
@@ -38,9 +42,15 @@ const PsychologistDashboardPage = () => {
   const handleSelectStudent = async (student) => {
     setSelectedStudent(student);
     try {
-      const response = await api.get(`/psychologist/students/${student.id}/tests/`);
-      setStudentTests(response.data);
-      setNote(response.data[0]?.psychologist_notes || '');
+      const token = localStorage.getItem('access');
+      const response = await fetch(`http://127.0.0.1:8000/api/psychologist/students/${student.id}/tests/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setStudentTests(data);
+        setNote(data[0]?.psychologist_notes || '');
+      }
     } catch (err) {
       console.error("Eroare la încărcarea istoricului studentului.");
     }
@@ -49,13 +59,24 @@ const PsychologistDashboardPage = () => {
   const handleSaveNote = async () => {
     if (!studentTests[0]) return;
     try {
-      await api.patch(`/psychologist/tests/${studentTests[0].id}/notes/`, {
-        psychologist_notes: note
+      const token = localStorage.getItem('access');
+      const response = await fetch(`http://127.0.0.1:8000/api/psychologist/tests/${studentTests[0].id}/notes/`, {
+        method: 'PATCH',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ psychologist_notes: note })
       });
-      alert("Recomandarea a fost salvată și trimisă studentului!");
-      fetchStudents(); 
+      
+      if (response.ok) {
+        alert("Recomandarea a fost salvată și trimisă studentului!");
+        fetchStudents(); 
+      } else {
+        alert("Eroare la salvarea notiței.");
+      }
     } catch (err) {
-      alert("Eroare la salvarea notiței.");
+      console.error("Eroare la salvare", err);
     }
   };
 
@@ -101,8 +122,6 @@ const PsychologistDashboardPage = () => {
                     backgroundColor: selectedStudent?.id === s.id ? '#f0fdf4' : '#f7fafc',
                     transition: 'all 0.2s ease'
                   }}
-                  onMouseOver={(e) => { if(selectedStudent?.id !== s.id) e.currentTarget.style.backgroundColor = '#edf2f7'; }}
-                  onMouseOut={(e) => { if(selectedStudent?.id !== s.id) e.currentTarget.style.backgroundColor = '#f7fafc'; }}
                 >
                   <div style={{ fontWeight: '700', fontSize: '1.05rem', color: selectedStudent?.id === s.id ? colors.primary : colors.text }}>
                     {s.first_name} {s.last_name}
@@ -121,7 +140,7 @@ const PsychologistDashboardPage = () => {
           {selectedStudent ? (
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
               
-              {/* HEADER PROFIL */}
+              {/* HEADER PROFIL STUDENT */}
               <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>

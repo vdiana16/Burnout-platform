@@ -10,8 +10,16 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  const { login, isAuthenticated } = useAuth(); 
+  const { login } = useAuth(); // Nu mai depindem de isAuthenticated aici pentru redirect
   const navigate = useNavigate();
+
+  // Verificăm DOAR la prima încărcare a paginii dacă utilizatorul e deja logat
+  useEffect(() => {
+    const token = localStorage.getItem('access');
+    if (token) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -20,50 +28,52 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
     try {
-      // 1. Așteptăm login-ul și salvăm datele user-ului returnat
+      // 1. Facem logarea
       const loggedInUser = await login(credentials); 
       const token = localStorage.getItem('access');
       
-      // 2. Extragem rolul (îl facem litere mici pentru siguranță)
-      const role = loggedInUser?.role?.toLowerCase();
-
-      // 3. Stabilim URL-ul de API și pagina de redirecționare în funcție de rol
-      const isPsychologist = role === 'psychologist';
-      const profileApiUrl = isPsychologist 
-        ? 'http://127.0.0.1:8000/api/psychologists/me/' 
-        : 'http://127.0.0.1:8000/api/students/me/';
+      // 2. Extragem datele fie din obiectul returnat, fie din memorie
+      const savedUserString = localStorage.getItem('user');
+      const fallbackUser = savedUserString && savedUserString !== 'undefined' ? JSON.parse(savedUserString) : null;
       
-      const profileRoute = isPsychologist ? '/psychologist-profile' : '/student-profile';
+      const finalUser = loggedInUser || fallbackUser;
+      
+      // 3. Extragem rolul în siguranță
+      const role = finalUser?.role?.toLowerCase();
+      
+      // DEBUG: Verifică consola browser-ului tău după ce dai login!
+      console.log("Date User:", finalUser);
+      console.log("Rol Detectat:", role);
 
-      try {
-        // 4. Verificăm dacă profilul specific rolului există
-        const profileResponse = await fetch(profileApiUrl, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (profileResponse.status === 404) {
-          // Dacă nu există profil (404), îl trimitem să îl completeze
-          navigate(profileRoute);
-        } else {
-          // Dacă profilul există (200 OK), mergem la dashboard-ul principal
+      // 4. Redirecționarea inteligentă
+      if (role === 'psychologist') {
+        try {
+          const res = await fetch('http://127.0.0.1:8000/api/psychologists/me/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.status === 404) navigate('/psychologist-profile');
+          else navigate('/dashboard');
+        } catch (err) {
           navigate('/dashboard');
         }
-      } catch (profileErr) {
-        // Dacă eroarea este de altă natură, mergem oricum la dashboard
-        navigate('/dashboard');
+      } else {
+        try {
+          const res = await fetch('http://127.0.0.1:8000/api/students/me/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.status === 404) navigate('/student-profile');
+          else navigate('/dashboard');
+        } catch (err) {
+          navigate('/dashboard');
+        }
       }
 
     } catch (err) {
       setError('Credențiale invalide. Te rugăm să încerci din nou.');
     }
   };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
 
   return (
     <div className="login-page">
@@ -96,10 +106,7 @@ const LoginPage = () => {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>

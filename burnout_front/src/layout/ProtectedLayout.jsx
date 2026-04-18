@@ -19,6 +19,18 @@ const ProtectedLayout = () => {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
+  const handleProfileClick = () => {
+    const role = user?.role?.toLowerCase();
+    
+    if (role === 'psychologist') {
+      navigate('/psychologist-profile');
+    } else {
+      navigate('/student-profile');
+    }
+    
+    handleMenuClose(); 
+  };
+
   return (
     <Box className="protected-wrapper">
       <AppBar position="fixed" className="app-bar" elevation={0} sx={{ backgroundColor: 'white', borderBottom: '1px solid #e2e8f0', color: '#2d3748' }}>
@@ -55,7 +67,7 @@ const ProtectedLayout = () => {
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 PaperProps={{ sx: { mt: 1.5, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', borderRadius: '12px', minWidth: '180px' } }}
               >
-                <MenuItem onClick={() => { navigate('/student-profile'); handleMenuClose(); }}>
+                <MenuItem onClick={handleProfileClick}>
                   <AccountCircleIcon sx={{ mr: 1, color: '#4a5568' }} /> Profilul Meu
                 </MenuItem>
                 <MenuItem onClick={() => { logout(); handleMenuClose(); }} sx={{ color: '#e53e3e' }}>

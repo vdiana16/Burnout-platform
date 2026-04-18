@@ -1,4 +1,4 @@
-from core.serializers import StudentProfileSerializer, PsychologistProfileSerializer
+from core.serializers import StudentProfileSerializer, PsychologistProfileSerializer, StudentListSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -60,3 +60,21 @@ class PsychologistProfileView(APIView):
     
     def post(self, request):
         return self.patch(request)
+    
+class PsychologistStudentsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        # 1. Verificăm dacă cel logat este psiholog și are o instituție
+        if hasattr(user, 'psychologist_profile') and user.psychologist_profile.institution:
+            institutie_psiholog = user.psychologist_profile.institution
+            
+            # 2. Căutăm TOȚI studenții care au ACEEAȘI instituție
+            studenti = StudentProfile.objects.filter(institution=institutie_psiholog)
+            
+            # 3. Îi trimitem către React folosind serializatorul de listă
+            serializer = StudentListSerializer(studenti, many=True)
+            return Response(serializer.data)
+            
+        return Res
