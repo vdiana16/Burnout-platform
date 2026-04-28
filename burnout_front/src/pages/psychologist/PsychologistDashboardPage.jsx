@@ -15,7 +15,8 @@ const PsychologistDashboardPage = () => {
     danger: '#e53e3e',
     warning: '#ed8936',
     success: '#38a169',
-    text: '#2d3748'
+    text: '#2d3748',
+    cardBg: '#ffffff'
   };
 
   useEffect(() => {
@@ -42,17 +43,23 @@ const PsychologistDashboardPage = () => {
   const handleSelectStudent = async (student) => {
     setSelectedStudent(student);
     try {
-      const token = localStorage.getItem('access');
-      const response = await fetch(`http://127.0.0.1:8000/api/psychologist/students/${student.id}/tests/`, {
+      // Notă: în configurația axios anterioară foloseai 'access_token', aici e 'access'. 
+      // Folosește cheia corectă sub care salvezi token-ul la login!
+      const token = localStorage.getItem('access'); 
+      
+      const response = await fetch(`http://127.0.0.1:8000/api/tests/?student_id=${student.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
       if (response.ok) {
         const data = await response.json();
         setStudentTests(data);
         setNote(data[0]?.psychologist_notes || '');
+      } else {
+        console.error("Backend-ul a returnat o eroare:", response.status);
       }
     } catch (err) {
-      console.error("Eroare la încărcarea istoricului studentului.");
+      console.error("Eroare la încărcarea istoricului studentului.", err);
     }
   };
 
@@ -91,16 +98,84 @@ const PsychologistDashboardPage = () => {
 
   if (loading) return <div style={{ padding: '40px', textAlign: 'center', fontSize: '1.2rem', color: '#718096' }}>Se încarcă baza de date a instituției...</div>;
 
+  const highRiskCount = students.filter(s => {
+    // Verificăm dacă există diagnostic și dacă conține cuvântul "ridicat" 
+    // (ignorăm litere mari/mici și spații)
+    const diag = s.last_diagnostic ? s.last_diagnostic.toLowerCase() : '';
+    return diag.includes('ridicat');
+  }).length;
+
+  const getOverallStatus = () => {
+    if (students.length === 0) return "Fără Date";
+    
+    let counts = { ridicat: 0, moderat: 0, scazut: 0 };
+    
+    students.forEach(s => {
+      const diag = s.last_diagnostic ? s.last_diagnostic.toLowerCase() : '';
+      if (diag.includes('ridicat')) counts.ridicat++;
+      else if (diag.includes('moderat')) counts.moderat++;
+      else if (diag.includes('scăzut') || diag.includes('scazut')) counts.scazut++;
+    });
+
+    if (counts.ridicat === 0 && counts.moderat === 0 && counts.scazut === 0) return "Fără Evaluări";
+    
+    if (counts.ridicat >= counts.moderat && counts.ridicat >= counts.scazut) return "Risc Ridicat";
+    if (counts.moderat >= counts.ridicat && counts.moderat >= counts.scazut) return "Risc Moderat";
+    return "Stare Bună";
+  };
+
   return (
     <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'inherit', color: colors.text }}>
       
-      <div style={{ marginBottom: '40px' }}>
+      {/* HEADER DASHBOARD */}
+      <div style={{ marginBottom: '30px' }}>
         <h1 style={{ margin: 0, fontWeight: '800', fontSize: '2.2rem' }}>Portal Management Studenți 🎓</h1>
         <p style={{ color: '#718096', fontSize: '1.1rem', marginTop: '10px' }}>
           Monitorizează starea de bine a studenților din instituția ta și oferă feedback personalizat.
         </p>
       </div>
 
+      {/* --- SECȚIUNE NOUĂ: STATISTICI GLOBALE --- */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+        
+        {/* Card 1: Total Studenți */}
+        <div style={{ backgroundColor: colors.cardBg, padding: '25px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ backgroundColor: '#e6fffa', padding: '20px', borderRadius: '20px', fontSize: '2rem' }}>👥</div>
+          <div>
+            <p style={{ margin: 0, color: '#a0aec0', fontSize: '0.9rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Studenți</p>
+            <h3 style={{ margin: '5px 0 0 0', color: '#2d3748', fontSize: '2.2rem', fontWeight: '900' }}>{students.length}</h3>
+          </div>
+        </div>
+
+        {/* Card 2: Risc Ridicat - ACUM DINAMIC */}
+        <div style={{ backgroundColor: colors.cardBg, padding: '25px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ backgroundColor: '#fff5f5', padding: '20px', borderRadius: '20px', fontSize: '2rem' }}>🚨</div>
+          <div>
+            <p style={{ margin: 0, color: '#a0aec0', fontSize: '0.9rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Risc Ridicat</p>
+            <h3 style={{ margin: '5px 0 0 0', color: highRiskCount > 0 ? colors.danger : colors.success, fontSize: '2.2rem', fontWeight: '900' }}>
+              {/* AICI ERA PROBLEMA: am pus variabila în loc de cifră fixă */}
+              {highRiskCount} <span style={{fontSize: '1rem', color: '#718096', fontWeight: '600'}}>studenți</span>
+            </h3>
+          </div>
+        </div>
+
+        {/* Card 3: Stare Generală - ACUM DINAMIC */}
+        <div style={{ backgroundColor: colors.cardBg, padding: '25px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ backgroundColor: '#fffaf0', padding: '20px', borderRadius: '20px', fontSize: '2rem' }}>📊</div>
+          <div>
+            <p style={{ margin: 0, color: '#a0aec0', fontSize: '0.9rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Stare Generală</p>
+            <h3 style={{ margin: '8px 0 0 0', color: colors.warning, fontSize: '1.4rem', fontWeight: '900' }}>
+              {/* AICI APELĂM FUNCȚIA CARE ANALIZEAZĂ TOȚI STUDENȚII */}
+              {getOverallStatus()}
+            </h3>
+          </div>
+        </div>
+
+      </div>
+      {/* --- SFÂRȘIT SECȚIUNE STATISTICI --- */}
+
+
+      {/* CONȚINUTUL PRINCIPAL (LISTA + PROFIL) */}
       <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '30px', alignItems: 'start' }}>
         
         {/* COLOANA STÂNGA: LISTA STUDENȚI */}

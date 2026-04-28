@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios'; 
-import { Paper, Typography, TextField, Button, Alert, Box, CircularProgress, LinearProgress, Grid } from '@mui/material';
+import { Paper, Typography, TextField, Button, Alert, Box, CircularProgress, LinearProgress, Stack, Divider } from '@mui/material';
 import '../../styles/StudentProfile.css'; 
 
 const PsychologistProfilePage = () => {
@@ -101,10 +101,10 @@ const PsychologistProfilePage = () => {
 
     // STILURI PENTRU CĂSUȚE (UI Premium)
     const readOnlyInputStyle = {
-        backgroundColor: '#f8fafc', // Gri foarte deschis
+        backgroundColor: '#f8fafc', 
         borderRadius: '10px',
         '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e2e8f0' },
-        '& .MuiInputBase-input': { color: '#718096', fontWeight: '500' } // Text gri închis
+        '& .MuiInputBase-input': { color: '#718096', fontWeight: '500' } 
     };
 
     const editableInputStyle = {
@@ -115,7 +115,8 @@ const PsychologistProfilePage = () => {
 
     return (
         <div className="profile-container">
-            <Paper className="profile-paper" elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: '24px', maxWidth: '850px', margin: '0 auto', mt: 4, border: '1px solid #edf2f7', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+            {/* Am redus lățimea maximă la 700px pentru ca elementele stivuite vertical să arate perfect proporționate */}
+            <Paper className="profile-paper" elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: '24px', maxWidth: '700px', margin: '0 auto', mt: 4, border: '1px solid #edf2f7', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
                 
                 <Box sx={{ textAlign: 'center', mb: 5 }}>
                     <Typography variant="h4" sx={{ fontWeight: '800', color: '#1a202c', mb: 1 }}>
@@ -127,7 +128,7 @@ const PsychologistProfilePage = () => {
                 </Box>
 
                 {/* BARA DE PROGRES */}
-                <Box sx={{ mb: 6, backgroundColor: '#f0fdf4', p: 3, borderRadius: '16px', border: '1px solid #c6f6d5' }}>
+                <Box sx={{ mb: 5, backgroundColor: '#f0fdf4', p: 3, borderRadius: '16px', border: '1px solid #c6f6d5' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="body2" sx={{ fontWeight: '800', color: progress === 100 ? '#276749' : '#2f855a' }}>
                             {progress === 100 ? '✨ Profil Complet (100%)' : `Completare Profil (${progress}%)`}
@@ -148,89 +149,73 @@ const PsychologistProfilePage = () => {
                 {error && <Alert severity="error" sx={{ mb: 4, borderRadius: '12px' }}>{error}</Alert>}
                 {success && <Alert severity="success" sx={{ mb: 4, borderRadius: '12px' }}>{success}</Alert>}
 
-                <Grid container spacing={4}>
-                    {/* --- SECȚIUNEA DATE AUTOMATE --- */}
-                    <Grid item xs={12}>
-                        <Typography variant="subtitle2" sx={{ color: '#a0aec0', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
-                            Date de Identificare (Aprobate)
-                        </Typography>
-                    </Grid>
+                {/* --- SECȚIUNEA DATE AUTOMATE --- */}
+                <Typography variant="subtitle1" sx={{ color: '#a0aec0', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', mb: 3 }}>
+                    Date de Identificare (Aprobate)
+                </Typography>
 
-                    <Grid item xs={12} sm={6}>
-                        <TextField label="Nume" value={formData.last_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField label="Prenume" value={formData.first_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField label="Email" value={formData.email} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField label="Instituție" value={formData.institution_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
-                    </Grid>
+                <Stack spacing={3}>
+                    <TextField label="Nume" value={formData.last_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
+                    <TextField label="Prenume" value={formData.first_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
+                    <TextField label="Email" value={formData.email} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
+                    <TextField label="Instituție" value={formData.institution_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
+                </Stack>
 
-                    {/* --- SECȚIUNEA DATE EDITABILE --- */}
-                    <Grid item xs={12} sx={{ mt: 2 }}>
-                        <Typography variant="subtitle2" sx={{ color: '#2E8B57', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
-                            Informații Publice (Editabile)
-                        </Typography>
-                    </Grid>
+                {/* Linie despărțitoare elegantă */}
+                <Divider sx={{ my: 5, borderColor: '#edf2f7' }} />
 
-                    <Grid item xs={12} sm={6}>
-                        <TextField 
-                            label="Titlu Profesional (ex: Psiholog Clinician)" 
-                            name="title" 
-                            value={formData.title} 
-                            onChange={handleChange} 
-                            fullWidth 
-                            sx={editableInputStyle}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField 
-                            label="Specializare (ex: Terapie Cognitivă)" 
-                            name="specialization" 
-                            value={formData.specialization} 
-                            onChange={handleChange} 
-                            fullWidth 
-                            sx={editableInputStyle}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField 
-                            label="Telefon de Contact" 
-                            name="phone_number" 
-                            value={formData.phone_number} 
-                            onChange={handleChange} 
-                            fullWidth 
-                            sx={editableInputStyle}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField 
-                            label="Locație Cabinet (Sala / Adresa)" 
-                            name="office_location" 
-                            value={formData.office_location} 
-                            onChange={handleChange} 
-                            fullWidth 
-                            sx={editableInputStyle}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField 
-                            label="Scurtă descriere (Bio)" 
-                            name="bio" 
-                            value={formData.bio} 
-                            onChange={handleChange} 
-                            fullWidth 
-                            multiline 
-                            rows={4} 
-                            placeholder="Descrie cum ajuți studenții și care este abordarea ta terapeutică..."
-                            sx={editableInputStyle}
-                        />
-                    </Grid>
-                </Grid>
+                {/* --- SECȚIUNEA DATE EDITABILE --- */}
+                <Typography variant="subtitle1" sx={{ color: '#2E8B57', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', mb: 3 }}>
+                    Informații Publice (Editabile)
+                </Typography>
 
+                <Stack spacing={3}>
+                    <TextField 
+                        label="Titlu Profesional (ex: Psiholog Clinician)" 
+                        name="title" 
+                        value={formData.title} 
+                        onChange={handleChange} 
+                        fullWidth 
+                        sx={editableInputStyle}
+                    />
+                    <TextField 
+                        label="Specializare (ex: Terapie Cognitivă)" 
+                        name="specialization" 
+                        value={formData.specialization} 
+                        onChange={handleChange} 
+                        fullWidth 
+                        sx={editableInputStyle}
+                    />
+                    <TextField 
+                        label="Telefon de Contact" 
+                        name="phone_number" 
+                        value={formData.phone_number} 
+                        onChange={handleChange} 
+                        fullWidth 
+                        sx={editableInputStyle}
+                    />
+                    <TextField 
+                        label="Locație Cabinet (Sala / Adresa)" 
+                        name="office_location" 
+                        value={formData.office_location} 
+                        onChange={handleChange} 
+                        fullWidth 
+                        sx={editableInputStyle}
+                    />
+                    <TextField 
+                        label="Scurtă descriere (Bio)" 
+                        name="bio" 
+                        value={formData.bio} 
+                        onChange={handleChange} 
+                        fullWidth 
+                        multiline 
+                        rows={4} 
+                        placeholder="Descrie cum ajuți studenții și care este abordarea ta terapeutică..."
+                        sx={editableInputStyle}
+                    />
+                </Stack>
+
+                {/* BUTOANE */}
                 <Box sx={{ mt: 6, display: 'flex', gap: 2, justifyContent: 'flex-end', borderTop: '1px solid #edf2f7', pt: 4 }}>
                     <Button 
                         variant="outlined" 
