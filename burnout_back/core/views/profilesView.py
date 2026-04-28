@@ -1,9 +1,9 @@
-from core.serializers import StudentProfileSerializer, PsychologistProfileSerializer, StudentListSerializer
+from core.serializers import StudentProfileSerializer, PsychologistProfileSerializer, StudentListSerializer, MessageSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from core.models.users import StudentProfile, PsychologistProfile 
+from core.models.users import StudentProfile, PsychologistProfile, Message
 
 class StudentProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -77,4 +77,30 @@ class PsychologistStudentsView(APIView):
             serializer = StudentListSerializer(studenti, many=True)
             return Response(serializer.data)
             
-        return Res
+        return Response(
+            {"detail": "Utilizatorul nu este asociat unui profil de psiholog sau nu are o instituție validă."}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+class MessageHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user1 = request.user
+        user2_id = request.query_params.get('other_user')
+
+        if user2_id:
+            # Filtrează conversația dintre cei doi
+            messages = Message.objects.filter(
+                Q(sender=user1, receiver_id=user2_id) | 
+                Q(sender_id=user2_id, receiver=user1)
+            )
+        else:
+            # Filtrează toate mesajele în care este implicat utilizatorul curent
+            messages = Message.objects.filter(
+                Q(sender=user1) | Q(receiver=user1)
+            )
+
+        # Mesajele sunt deja ordonate cronologic datorită 'ordering' din Meta
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)

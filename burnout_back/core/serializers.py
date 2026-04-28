@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Institution, PsychologistProfile, StudentProfile, Question, TestResult
+from .models import User, Institution, PsychologistProfile, StudentProfile, Question, TestResult, Message 
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -41,6 +41,9 @@ class UserSerializer(serializers.ModelSerializer):
 class StudentProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     institution = InstitutionSerializer(read_only=True)
+    
+    # TREBUIE SĂ ADAUGI ASTA:
+    assigned_psychologist = serializers.SerializerMethodField()
 
     class Meta:
         model = StudentProfile
@@ -166,3 +169,19 @@ class TestResultSerializer(serializers.ModelSerializer):
         )
 
         return test_result
+    
+class MessageSerializer(serializers.ModelSerializer):
+    sender_username = serializers.ReadOnlyField(source='sender.username')
+
+    class Meta:
+        model = Message
+        fields = [
+            'id', 
+            'sender', 
+            'sender_username', 
+            'receiver', 
+            'content', 
+            'timestamp', 
+            'is_read'
+        ]
+        read_only_fields = ['timestamp']
