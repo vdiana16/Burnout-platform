@@ -48,8 +48,20 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             'id', 'user', 'institution', 'gender', 'age', 
             'education_level', 'study_stage', 'field', 
             'academic_gpa', 'financial_stress', 'employment',
-            'study_hours', 'sleep_hours'  
+            'study_hours', 'sleep_hours', 'assigned_psychologist'
         ]
+
+    def get_assigned_psychologist(self, obj):
+        if obj.institution:
+            psych_profile = PsychologistProfile.objects.filter(institution=obj.institution).first()
+            if psych_profile:
+                return {
+                    "id": psych_profile.user.id,
+                    "first_name": psych_profile.user.first_name,
+                    "last_name": psych_profile.user.last_name,
+                    "email": psych_profile.user.email
+                }
+        return None
 
 class StudentListSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', read_only=True)
