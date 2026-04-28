@@ -60,6 +60,7 @@
 
 /* Butonul de login - Identic cu cel de register */
 .login-button {
+  background-color: #2E8B57 !important;
   margin-top: 1rem !important;
   padding: 14px 0 !important;
   border-radius: 10px !important;
@@ -92,6 +93,14 @@
 
 .login-link:hover {
   text-decoration: underline;
+}
+
+.login-button:hover, 
+.login-button:active, 
+.login-button:focus,
+.login-button.Mui-focusVisible {
+  background-color: #236b43 !important;
+  color: #ffffff !important; 
 }
 
 @keyframes fadeIn {

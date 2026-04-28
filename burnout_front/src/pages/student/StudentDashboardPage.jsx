@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext'; 
-// Am adăugat componentele pentru Radar Chart
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis 
@@ -14,6 +13,12 @@ const StudentDashboardPage = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const [psychologistId, setPsychologistId] = useState(null);
+
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const colors = {
     primary: '#2E8B57',    
@@ -23,9 +28,53 @@ const StudentDashboardPage = () => {
     warning: '#ed8936',
     success: '#38a169',
     info: '#3182ce',
-    radarFill: '#9f7aea', // Culoare pentru radar
+    radarFill: '#9f7aea', 
     radarStroke: '#6b46c1'
   };
+
+  useEffect(() => {
+      if (!user?.id) return;
+
+      // Conectare la WebSocket folosind ID-ul studentului curent
+      // Asigură-te că URL-ul coincide cu cel din routing.py: ws/chat/ID/
+      const url = `ws://127.0.0.1:8000/ws/chat/${user.id}/`;
+      socketRef.current = new WebSocket(url);
+
+      socketRef.current.onmessage = (e) => {
+          const data = JSON.parse(e.data);
+          setMessages((prev) => [...prev, {
+              sender_id: data.sender_id,
+              message: data.message,
+              timestamp: new Date().toLocaleTimeString()
+          }]);
+      };
+
+      socketRef.current.onclose = () => console.log("Chat deconectat");
+
+      return () => {
+          if (socketRef.current) socketRef.current.close();
+      };
+  }, [user?.id]);
+
+  const sendMessage = () => {
+      if (newMessage.trim() === "" || !socketRef.current) return;
+
+      // NOTĂ: receiver_id trebuie să fie ID-ul psihologului tău. 
+      // Dacă ai un singur psiholog pe instituție, poți să-l preiei din profilul de student (dacă l-ai adăugat în serializer)
+      // Momentan punem un ID generic sau îl poți extrage din datele primite de la profil.
+      const messageData = {
+          message: newMessage,
+          sender_id: user.id,
+          receiver_id: psychologistId
+      };
+
+      socketRef.current.send(JSON.stringify(messageData));
+      setNewMessage('');
+  };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -56,14 +105,40 @@ const StudentDashboardPage = () => {
                 if (data.education_level || data.age) {
                     setIsProfileComplete(true);
                 }
+                if (data.assigned_psychologist && data.assigned_psychologist.id) {
+                    setPsychologistId(data.assigned_psychologist.id);
+                }
             }
         } catch (err) {
             console.error("Eroare verificare profil.");
         }
     }
 
+    const fetchMessagesHistory = async () => {
+        try {
+            const token = localStorage.getItem('access');
+            // Aici trebuie să te asiguri că ai făcut o rută în Django (ex: /api/messages/)
+            // care returnează mesajele dintre userul curent și psiholog.
+            const response = await fetch('http://127.0.0.1:8000/api/messages/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const formattedHistory = data.map(msg => ({
+                    sender_id: msg.sender,
+                    message: msg.content
+                }));
+                
+                setMessages(formattedHistory);
+            }
+        } catch (err) {
+            console.error("Eroare la încărcarea istoricului de mesaje.");
+        }
+    };
+
     fetchResults();
     checkProfile();
+    fetchMessagesHistory();
   }, []);
 
   const handleStartQuiz = () => {
@@ -203,23 +278,6 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 3. FEEDBACK PSIHOLOG */}
-      {lastResult && lastResult.psychologist_notes && (
-        <div style={{ 
-          backgroundColor: '#ebf8ff', padding: '25px 40px', borderRadius: '24px', 
-          boxShadow: '0 4px 20px rgba(49, 130, 206, 0.1)', border: '1px solid #bee3f8',
-          display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '30px'
-        }}>
-          <div style={{ fontSize: '2rem' }}>💬</div>
-          <div>
-            <h3 style={{ margin: 0, fontSize: '1rem', color: '#2b6cb0', textTransform: 'uppercase', letterSpacing: '1px' }}>Mesaj de la Psiholog</h3>
-            <p style={{ fontSize: '1.1rem', color: '#2c5282', margin: '10px 0 0 0', lineHeight: '1.6', fontStyle: 'italic', fontWeight: '500' }}>
-              "{lastResult.psychologist_notes}"
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* 4. ANALIZĂ DETALIATĂ (RADAR CHART) - NOU! */}
       {lastResult && radarData.length > 0 && (
         <div style={{ marginBottom: '40px' }}>
@@ -284,22 +342,64 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 6. RECOMANDĂRI */}
-      <div>
-        <h2 style={{ fontSize: '1.6rem', marginBottom: '25px', fontWeight: '800' }}>Recomandări pentru Tine</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-          <div style={{ padding: '25px', backgroundColor: colors.secondary, borderRadius: '20px', border: '1px solid #dcfce7', transition: 'all 0.3s' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '15px' }}>⏱️</div>
-            <h4 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>Tehnica Pomodoro</h4>
-            <p style={{ fontSize: '0.9rem', color: '#4a5568', lineHeight: '1.5' }}>Ideală pentru sesiunile lungi de studiu. Împarte timpul în intervale de 25 min cu pauze de 5 min.</p>
-          </div>
-          <div style={{ padding: '25px', backgroundColor: '#fffaf0', borderRadius: '20px', border: '1px solid #feebc8' }}>
-            <div style={{ fontSize: '2rem', marginBottom: '15px' }}>🧘</div>
-            <h4 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>Mindfulness</h4>
-            <p style={{ fontSize: '0.9rem', color: '#4a5568', lineHeight: '1.5' }}>Exercițiile scurte de respirație pot reduce nivelul de cortizol (hormonul stresului) instantaneu.</p>
-          </div>
+      {/* 5. CHAT LIVE CU PSIHOLOGUL (În loc de Feedback static) */}
+      <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', marginBottom: '40px' }}>
+        <h2 style={{ fontSize: '1.6rem', marginBottom: '20px', fontWeight: '800' }}>
+          Consiliere Live 💬
+        </h2>
+        
+        {/* Fereastra de mesaje */}
+        <div style={{ 
+          height: '350px', overflowY: 'auto', border: '1px solid #edf2f7', 
+          borderRadius: '16px', padding: '20px', marginBottom: '20px', 
+          backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '10px' 
+        }}>
+          {messages.length === 0 ? (
+            <div style={{ textAlign: 'center', color: '#a0aec0', margin: 'auto' }}>
+              Începe o conversație cu psihologul tău pentru suport personalizat.
+            </div>
+          ) : (
+            messages.map((msg, index) => (
+              <div key={index} style={{ 
+                alignSelf: msg.sender_id === user.id ? 'flex-end' : 'flex-start',
+                backgroundColor: msg.sender_id === user.id ? colors.primary : '#ffffff',
+                color: msg.sender_id === user.id ? 'white' : colors.text,
+                padding: '10px 18px', borderRadius: '18px', maxWidth: '75%',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: msg.sender_id === user.id ? 'none' : '1px solid #edf2f7'
+              }}>
+                {msg.message}
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Zona de input */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <input 
+            type="text" 
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder="Scrie un mesaj psihologului..."
+            style={{ 
+              flex: 1, padding: '14px 20px', borderRadius: '30px', 
+              border: '1px solid #e2e8f0', outline: 'none', fontSize: '1rem' 
+            }}
+          />
+          <button 
+            onClick={sendMessage}
+            style={{ 
+              padding: '12px 28px', backgroundColor: colors.primary, 
+              color: 'white', border: 'none', borderRadius: '30px', 
+              cursor: 'pointer', fontWeight: 'bold', transition: '0.2s'
+            }}
+          >
+            Trimite
+          </button>
         </div>
       </div>
+
     </div>
   );
 };

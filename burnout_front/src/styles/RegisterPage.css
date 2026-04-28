@@ -80,6 +80,13 @@
   text-decoration: underline;
 }
 
+.register-button:hover, 
+.register-button:active, 
+.register-button:focus {
+  background-color: #236b43 !important;
+  color: #ffffff !important; /* Rămâne alb la hover */
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

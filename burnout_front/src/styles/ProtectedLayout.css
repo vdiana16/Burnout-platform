@@ -1,53 +1,39 @@
-@import './Global.css';
-
-.protected-wrapper {
-  min-height: 100vh;
-  background-color: #f8faf9;
-}
-
+/* Fundal alb și text verde închis pentru vizibilitate optimă */
 .app-bar {
-  background: var(--primary-menta) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
 }
 
-.app-title {
+.app-title-text {
+  color: #2E8B57 !important; /* Verde închis profesional */
   font-weight: 800 !important;
-  letter-spacing: 1px;
-  flex-grow: 1;
+  font-family: 'Inter', sans-serif;
 }
 
-.nav-link {
+.nav-menu-btn {
+  color: #4a5568 !important; /* Gri închis pentru textul butoanelor */
   text-transform: none !important;
   font-weight: 600 !important;
-  opacity: 0.9;
+  font-size: 0.95rem !important;
+  margin-left: 15px !important;
 }
 
-.nav-link:hover {
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.1) !important;
+.nav-menu-btn:hover {
+  color: #2E8B57 !important;
+  background-color: #f0fdf4 !important;
 }
 
-.logout-btn {
-  text-transform: none !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
-  color: white !important;
-  font-weight: bold !important;
+.nav-avatar {
+  transition: transform 0.2s;
 }
 
-.logout-btn:hover {
-  border-color: white !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
+.nav-avatar:hover {
+  transform: scale(1.1);
 }
 
-.user-avatar {
-  background-color: var(--primary-hover) !important;
-  border: 2px solid white;
-  width: 35px !important;
-  height: 35px !important;
-  font-size: 0.9rem !important;
-}
-
-.main-content {
-  padding-top: 80px; /* Ca să nu intre sub Navbar-ul fix */
-  min-height: 100vh;
+.nav-dropdown-menu {
+  margin-top: 8px;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
 }

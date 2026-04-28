@@ -216,28 +216,24 @@ const PsychologistProfilePage = () => {
                 </Stack>
 
                 {/* BUTOANE */}
-                <Box sx={{ mt: 6, display: 'flex', gap: 2, justifyContent: 'flex-end', borderTop: '1px solid #edf2f7', pt: 4 }}>
-                    <Button 
-                        variant="outlined" 
-                        onClick={() => navigate('/dashboard')}
-                        sx={{ borderRadius: '12px', fontWeight: 'bold', color: '#4a5568', borderColor: '#e2e8f0', px: 3, '&:hover': { backgroundColor: '#f7fafc', borderColor: '#cbd5e0' } }}
-                    >
-                        Înapoi
-                    </Button>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 4 }}>
                     <Button 
                         variant="contained" 
+                        fullWidth
+                        className="btn-save-profile" // Folosim clasa din CSS-ul comun
                         onClick={handleSave}
                         disabled={saving}
-                        sx={{ 
-                            backgroundColor: '#2E8B57', 
-                            borderRadius: '12px',
-                            fontWeight: 'bold',
-                            px: 4,
-                            boxShadow: '0 4px 14px rgba(46, 139, 87, 0.4)',
-                            '&:hover': { backgroundColor: '#1b4332', boxShadow: '0 6px 20px rgba(46, 139, 87, 0.6)' }
-                        }}
                     >
                         {saving ? 'Se salvează...' : 'SALVEAZĂ MODIFICĂRILE'}
+                    </Button>
+
+                    <Button 
+                        variant="text" 
+                        fullWidth
+                        className="btn-back-profile" // Folosim clasa din CSS-ul comun
+                        onClick={() => navigate('/dashboard')}
+                    >
+                        Înapoi la Dashboard
                     </Button>
                 </Box>
             </Paper>

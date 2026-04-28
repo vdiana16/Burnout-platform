@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { AppBar, Toolbar, Typography, Button, Box, Avatar, Container, Menu, MenuItem, IconButton, Tooltip } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import '../styles/ProtectedView.css';
+import '../styles/ProtectedLayout.css';
 
 const ProtectedLayout = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
-  // Stare pentru meniul de profil
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -19,41 +15,31 @@ const ProtectedLayout = () => {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  const handleProfileClick = () => {
-    const role = user?.role?.toLowerCase();
-    
-    if (role === 'psychologist') {
-      navigate('/psychologist-profile');
-    } else {
-      navigate('/student-profile');
-    }
-    
-    handleMenuClose(); 
-  };
-
   return (
     <Box className="protected-wrapper">
-      <AppBar position="fixed" className="app-bar" elevation={0} sx={{ backgroundColor: 'white', borderBottom: '1px solid #e2e8f0', color: '#2d3748' }}>
+      <AppBar position="fixed" className="app-bar" elevation={0}>
         <Container maxWidth="lg">
-          <Toolbar className="toolbar" sx={{ px: '0 !important', justifyContent: 'space-between' }}>
-            <Typography 
-              variant="h6" 
-              className="app-title" 
+          <Toolbar disableGutters>
+            {/* Logo înlocuit cu Emoji 🌿 pentru a evita erorile de import */}
+            <Box 
+              sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, cursor: 'pointer' }} 
               onClick={() => navigate('/dashboard')}
-              style={{ cursor: 'pointer', fontWeight: 'bold', color: '#2E8B57' }}
             >
-              BurnoutApp
-            </Typography>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button color="inherit" onClick={() => navigate('/dashboard')} sx={{ textTransform: 'none', fontWeight: 500 }}>
-                Dashboard
-              </Button>
+              <span style={{ fontSize: '24px', marginRight: '8px' }}>🌿</span>
+              <Typography variant="h6" className="app-title-text">
+                Student Wellbeing
+              </Typography>
+            </Box>
 
-              {/* Avatar cu Meniu Dropdown */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Button className="nav-menu-btn" onClick={() => navigate('/dashboard')}>Dashboard</Button>
+              {user?.role === 'STUDENT' && (
+                <Button className="nav-menu-btn" onClick={() => navigate('/quiz')}>Evaluare</Button>
+              )}
+              
               <Tooltip title="Setări cont">
-                <IconButton onClick={handleMenuClick} sx={{ p: 0, border: '2px solid #2E8B57' }}>
-                  <Avatar sx={{ bgcolor: '#2E8B57', width: 35, height: 35, fontSize: '0.9rem' }}>
+                <IconButton onClick={handleMenuClick} sx={{ ml: 2, p: 0.5, border: '2px solid #2E8B57' }}>
+                  <Avatar className="nav-avatar" sx={{ bgcolor: '#2E8B57', width: 32, height: 32, fontSize: '0.9rem' }}>
                     {user?.first_name ? user.first_name[0].toUpperCase() : 'U'}
                   </Avatar>
                 </IconButton>
@@ -63,25 +49,26 @@ const ProtectedLayout = () => {
                 anchorEl={anchorEl}
                 open={open}
                 onClose={handleMenuClose}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                PaperProps={{ sx: { mt: 1.5, boxShadow: '0 4px 20px rgba(0,0,0,0.1)', borderRadius: '12px', minWidth: '180px' } }}
+                PaperProps={{ className: 'nav-dropdown-menu' }}
               >
-                <MenuItem onClick={handleProfileClick}>
-                  <AccountCircleIcon sx={{ mr: 1, color: '#4a5568' }} /> Profilul Meu
+                <MenuItem onClick={() => { 
+                  navigate(user?.role === 'PSYCHOLOGIST' ? '/psychologist-profile' : '/student-profile'); 
+                  handleMenuClose(); 
+                }}>
+                  <span style={{ marginRight: '10px' }}>👤</span> Profilul Meu
                 </MenuItem>
                 <MenuItem onClick={() => { logout(); handleMenuClose(); }} sx={{ color: '#e53e3e' }}>
-                  <LogoutIcon sx={{ mr: 1 }} /> Deconectare
+                  <span style={{ marginRight: '10px' }}>🚪</span> Deconectare
                 </MenuItem>
               </Menu>
             </Box>
           </Toolbar>
         </Container>
       </AppBar>
-
-      <Box component="main" className="main-content" sx={{ pt: '80px' }}>
+      <Toolbar /> 
+      <Container maxWidth="lg" sx={{ mt: 4, pb: 4 }}>
         <Outlet />
-      </Box>
+      </Container>
     </Box>
   );
 };
