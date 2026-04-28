@@ -30,23 +30,31 @@ class ChatConsumer(WebsocketConsumer):
     def receive(self, text_data):
         data = json.loads(text_data)
         message_content = data['message']
-        sender_id = data['sender_id']
-        receiver_id = data['receiver_id']
+        sender_id = data.get('sender_id')
+        receiver_id = data.get('receiver_id')
 
-        # 1. Salvăm mesajul în Baza de Date
-        sender = User.objects.get(id=sender_id)
-        receiver = User.objects.get(id=receiver_id)
-        Message.objects.create(sender=sender, receiver=receiver, content=message_content)
+        # Verificăm dacă primim ambele ID-uri valide
+        if not sender_id or not receiver_id:
+            print("Eroare: Lipsesc ID-urile pentru expeditor sau destinatar.")
+            return
 
-        # 2. Trimitem mesajul (Broadcast) tuturor celor conectați în această cameră (studentul și psihologul)
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message_content,
-                'sender_id': sender_id
-            }
-        )
+        try:
+            # 1. Salvăm mesajul în Baza de Date
+            sender = User.objects.get(id=sender_id)
+            receiver = User.objects.get(id=receiver_id)
+            Message.objects.create(sender=sender, receiver=receiver, content=message_content)
+
+            # 2. Trimitem mesajul (Broadcast) tuturor celor conectați
+            async_to_sync(self.channel_layer.group_send)(
+                self.room_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': message_content,
+                    'sender_id': sender_id
+                }
+            )
+        except User.DoesNotExist:
+            print(f"Eroare DB: Userul {sender_id} sau destinatarul {receiver_id} nu a fost găsit.")
 
     # Această funcție primește mesajul de la group_send și îl trimite fizic spre Frontend (React)
     def chat_message(self, event):
