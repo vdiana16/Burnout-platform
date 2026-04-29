@@ -38,7 +38,7 @@ class StudentProfile(models.Model):
     age = models.IntegerField(null=True, blank=True)
     EDU_CHOICES = (('Liceu', 'Liceu'), ('Licență', 'Licență'), ('Master', 'Master'), ('Doctorat', 'Doctorat'))
     education_level = models.CharField(max_length=20, choices=EDU_CHOICES, null=True, blank=True)
-    STAGE_CHOICES = (('Anul 1', 'Anul 1'), ('Anul 2', 'Anul 2'), ('Anul 3', 'Anul 3'), ('An Terminal', 'An Terminal'))
+    STAGE_CHOICES = (('Anul 1', 'Anul 1'), ('Anul 2', 'Anul 2'), ('Anul 3', 'Anul 3'), ('Anul 4+', 'Anul 4+'))
     study_stage = models.CharField(max_length=20, choices=STAGE_CHOICES, null=True, blank=True)
     FIELD_CHOICES = (
         ('Real', 'Real / Inginerie / Științe Exacte'),
@@ -49,8 +49,6 @@ class StudentProfile(models.Model):
     )
     field = models.CharField(max_length=50, choices=FIELD_CHOICES, null=True, blank=True)    
     academic_gpa = models.FloatField(null=True, blank=True)
-    EMP_CHOICES = (('Nu', 'Nu'), ('Part-time', 'Part-time'), ('Full-time', 'Full-time'))
-    employment = models.CharField(max_length=20, choices=EMP_CHOICES, default='Nu')
     
     def __str__(self):
         return f"Profil: {self.user.username}"

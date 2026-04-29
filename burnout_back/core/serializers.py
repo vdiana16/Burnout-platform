@@ -51,7 +51,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'institution', 'age', 
             'education_level', 'study_stage', 'field', 
-            'academic_gpa', 'employment','assigned_psychologist'
+            'academic_gpa','assigned_psychologist'
         ]
 
     def get_assigned_psychologist(self, obj):
