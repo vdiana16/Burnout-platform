@@ -160,6 +160,10 @@ const QuizPage = () => {
     return { color: '#3182ce', bg: '#ebf8ff', icon: '📊', message: 'Acesta este profilul tău actual. Verifică sfaturile personalizate pregătite pentru tine.' };
   };
 
+  const totalQuestions = questions.length;
+  const answeredQuestions = Object.values(answers).filter(val => val !== undefined && val !== '').length;
+  const progress = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
+
   // --------------------------------
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#2E8B57' }}><h3>Se încarcă evaluarea...</h3></div>;
@@ -228,7 +232,42 @@ const QuizPage = () => {
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <h1 style={{ color: '#1b4332', textAlign: 'center', marginBottom: '10px' }}>Evaluare Săptămânală</h1>
         <p style={{ textAlign: 'center', color: '#4a5568', marginBottom: '40px' }}>Răspunde sincer pentru rezultate precise.</p>
-
+        <div style={{ 
+            position: 'sticky', 
+            top: '80px', 
+            zIndex: 10, 
+            backgroundColor: '#ffffff', 
+            padding: '20px', 
+            borderRadius: '16px', 
+            boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+            marginBottom: '40px',
+            border: '1px solid #edf2f7'
+        }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontWeight: '600', color: '#2d3748' }}>Progres Evaluare</span>
+                <span style={{ fontWeight: '800', color: '#2E8B57' }}>
+                    {answeredQuestions} / {totalQuestions}
+                </span>
+            </div>
+            
+            {/* Bara vizuală de fundal */}
+            <div style={{ width: '100%', backgroundColor: '#e2e8f0', borderRadius: '10px', height: '12px', overflow: 'hidden' }}>
+                {/* Bara de progres efectivă */}
+                <div style={{ 
+                    width: `${progress}%`, 
+                    backgroundColor: progress === 100 ? '#38a169' : '#2E8B57', 
+                    height: '100%', 
+                    borderRadius: '10px',
+                    transition: 'width 0.4s ease-out, background-color 0.4s ease' 
+                }}></div>
+            </div>
+            
+            {progress === 100 && (
+                 <p style={{ margin: '10px 0 0 0', textAlign: 'center', color: '#38a169', fontWeight: 'bold', fontSize: '0.9rem', animation: 'fadeIn 0.5s' }}>
+                    Perfect! Acum poți finaliza evaluarea.
+                 </p>
+            )}
+        </div>
         <form onSubmit={handleSubmit}>
           
           {/* Randăm fiecare grup (secțiune) creat */}

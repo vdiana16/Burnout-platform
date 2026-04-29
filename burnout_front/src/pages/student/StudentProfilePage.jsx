@@ -82,12 +82,38 @@ const StudentProfilePage = () => {
         }
     };
 
+    const calculateProgress = () => {
+        const fieldsToCheck = ['age', 'education_level', 'study_stage', 'academic_gpa'];
+        let filledCount = 0;
+        fieldsToCheck.forEach(field => {
+            if (formData[field] !== null && formData[field] !== undefined && String(formData[field]).trim() !== '') {
+                filledCount++;
+            }
+        });
+        return (filledCount / fieldsToCheck.length) * 100;
+    };
+
+    const progress = calculateProgress();
+
     if (loading) return <Typography sx={{ p: 4, textAlign: 'center' }}>Se încarcă...</Typography>;
 
     return (
         <div className="profile-page-container">
             <Paper className="profile-card-paper" elevation={0}>
                 <Typography variant="h4" className="profile-header-title">Profil Student</Typography>
+                
+                <Box sx={{ mb: 4, backgroundColor: '#f0fdf4', p: 3, borderRadius: '16px', border: '1px solid #c6f6d5' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: '800', color: progress === 100 ? '#276749' : '#2f855a' }}>
+                            {progress === 100 ? '✨ Profil Complet (100%)' : `Completare Profil (${progress}%)`}
+                        </Typography>
+                    </Box>
+                    <LinearProgress 
+                        variant="determinate" 
+                        value={progress} 
+                        sx={{ height: 10, borderRadius: 5, backgroundColor: '#c6f6d5', '& .MuiLinearProgress-bar': { backgroundColor: '#38a169' } }} 
+                    />
+                </Box>
 
                 <form onSubmit={handleSubmit}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
