@@ -23,6 +23,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             'id': self.user.id,
             'username': self.user.username,
             'first_name': self.user.first_name,
+            'last_name': self.user.last_name, 
+            'email': self.user.email,         
             'role': self.user.role, 
             'institution_name': institution_name
         }
@@ -42,16 +44,14 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     institution = InstitutionSerializer(read_only=True)
     
-    # TREBUIE SĂ ADAUGI ASTA:
     assigned_psychologist = serializers.SerializerMethodField()
 
     class Meta:
         model = StudentProfile
         fields = [
-            'id', 'user', 'institution', 'gender', 'age', 
+            'id', 'user', 'institution', 'age', 
             'education_level', 'study_stage', 'field', 
-            'academic_gpa', 'financial_stress', 'employment',
-            'study_hours', 'sleep_hours', 'assigned_psychologist'
+            'academic_gpa', 'employment','assigned_psychologist'
         ]
 
     def get_assigned_psychologist(self, obj):
@@ -108,7 +108,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('username', 'password', 'email', 'first_name', 'last_name', 'role', 'institution')
         extra_kwargs = {'password': {'write_only': True}}
 
-    # PASUL 1: Validarea datelor  înainte de a începe salvarea
     def validate(self, data):
         password = data.get('password')
         
@@ -119,7 +118,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             
         return data
 
-    # PASUL 2: Crearea atomică a utilizatorului și a profilului
     @transaction.atomic
     def create(self, validated_data):
         institution = validated_data.pop('institution', None)        

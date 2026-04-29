@@ -27,10 +27,11 @@ export const validateRegisterForm = (data) => {
     errors.email = "Introduceți o adresă de email validă.";
   }
 
-  if (!isRequired(data.password)) {
-    errors.password = "Parola este obligatorie.";
-  } else if (!hasMinLength(data.password, 8)) {
-    errors.password = "Parola trebuie să aibă minim 8 caractere.";
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!formData.password) {
+      errors.password = "Parola este obligatorie.";
+  } else if (!passwordRegex.test(formData.password)) {
+      errors.password = "Parola trebuie să aibă min. 8 caractere, o literă mare, o cifră și un caracter special (@$!%*?&).";
   }
 
   if (data.password !== data.retype_password) {

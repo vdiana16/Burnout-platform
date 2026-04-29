@@ -26,7 +26,6 @@ const RegisterPage = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [generalError, setGeneralError] = useState('');
   
-  // State-uri pentru vizualizarea parolelor (ochișorul)
   const [showPassword, setShowPassword] = useState(false);
   const [showRetypePassword, setShowRetypePassword] = useState(false);
   
