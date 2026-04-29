@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios'; 
 import { Paper, Typography, TextField, Button, Alert, Box, CircularProgress, LinearProgress, Stack, Divider } from '@mui/material';
-import '../../styles/StudentProfile.css'; 
+import '../../styles/StudentProfile.css'; // Folosim același fișier CSS
 
 const PsychologistProfilePage = () => {
     const navigate = useNavigate();
@@ -99,36 +99,19 @@ const PsychologistProfilePage = () => {
 
     const progress = calculateProgress();
 
-    // STILURI PENTRU CĂSUȚE (UI Premium)
-    const readOnlyInputStyle = {
-        backgroundColor: '#f8fafc', 
-        borderRadius: '10px',
-        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e2e8f0' },
-        '& .MuiInputBase-input': { color: '#718096', fontWeight: '500' } 
-    };
-
-    const editableInputStyle = {
-        '& .MuiOutlinedInput-root': {
-            borderRadius: '10px',
-        }
-    };
-
     return (
-        <div className="profile-container">
-            {/* Am redus lățimea maximă la 700px pentru ca elementele stivuite vertical să arate perfect proporționate */}
-            <Paper className="profile-paper" elevation={0} sx={{ p: { xs: 3, md: 5 }, borderRadius: '24px', maxWidth: '700px', margin: '0 auto', mt: 4, border: '1px solid #edf2f7', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' }}>
+        <div className="profile-page-container">
+            <Paper className="profile-card-paper" elevation={0}>
                 
-                <Box sx={{ textAlign: 'center', mb: 5 }}>
-                    <Typography variant="h4" sx={{ fontWeight: '800', color: '#1a202c', mb: 1 }}>
-                        Profil Profesional
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: '#718096' }}>
-                        Completează-ți profilul pentru a oferi încredere studenților din instituția ta.
-                    </Typography>
-                </Box>
+                <Typography variant="h4" className="profile-header-title">
+                    Profil Profesional
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#718096', textAlign: 'center', mb: 4, mt: -2 }}>
+                    Completează-ți profilul pentru a oferi încredere studenților din instituția ta.
+                </Typography>
 
-                {/* BARA DE PROGRES */}
-                <Box sx={{ mb: 5, backgroundColor: '#f0fdf4', p: 3, borderRadius: '16px', border: '1px solid #c6f6d5' }}>
+                {/* BARA DE PROGRES RĂMÂNE - E O IDEE EXCELENTĂ */}
+                <Box sx={{ mb: 4, backgroundColor: '#f0fdf4', p: 3, borderRadius: '16px', border: '1px solid #c6f6d5' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="body2" sx={{ fontWeight: '800', color: progress === 100 ? '#276749' : '#2f855a' }}>
                             {progress === 100 ? '✨ Profil Complet (100%)' : `Completare Profil (${progress}%)`}
@@ -139,103 +122,58 @@ const PsychologistProfilePage = () => {
                         value={progress} 
                         sx={{ height: 10, borderRadius: 5, backgroundColor: '#c6f6d5', '& .MuiLinearProgress-bar': { backgroundColor: '#38a169' } }} 
                     />
-                    {progress < 100 && (
-                        <Typography variant="caption" sx={{ color: '#48bb78', display: 'block', mt: 1, fontWeight: '500' }}>
-                            Adaugă datele lipsă pentru a atinge 100%.
-                        </Typography>
-                    )}
                 </Box>
 
-                {error && <Alert severity="error" sx={{ mb: 4, borderRadius: '12px' }}>{error}</Alert>}
-                {success && <Alert severity="success" sx={{ mb: 4, borderRadius: '12px' }}>{success}</Alert>}
+                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
+                {success && <Alert severity="success" sx={{ mb: 3, borderRadius: '12px' }}>{success}</Alert>}
 
-                {/* --- SECȚIUNEA DATE AUTOMATE --- */}
-                <Typography variant="subtitle1" sx={{ color: '#a0aec0', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', mb: 3 }}>
-                    Date de Identificare (Aprobate)
-                </Typography>
+                <form>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        
+                        {/* --- SECȚIUNEA DATE AUTOMATE --- */}
+                        <Typography className="profile-section-title">📧 Date de Identificare (Aprobate)</Typography>
+                        <Stack spacing={2}>
+                            <TextField label="Nume" value={formData.last_name} fullWidth InputProps={{ readOnly: true }} sx={{ bgcolor: '#f8fafc' }} />
+                            <TextField label="Prenume" value={formData.first_name} fullWidth InputProps={{ readOnly: true }} sx={{ bgcolor: '#f8fafc' }} />
+                            <TextField label="Email" value={formData.email} fullWidth InputProps={{ readOnly: true }} sx={{ bgcolor: '#f8fafc' }} />
+                            <TextField label="Instituție" value={formData.institution_name} fullWidth InputProps={{ readOnly: true }} sx={{ bgcolor: '#f8fafc' }} />
+                        </Stack>
 
-                <Stack spacing={3}>
-                    <TextField label="Nume" value={formData.last_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
-                    <TextField label="Prenume" value={formData.first_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
-                    <TextField label="Email" value={formData.email} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
-                    <TextField label="Instituție" value={formData.institution_name} fullWidth InputProps={{ readOnly: true }} sx={readOnlyInputStyle} />
-                </Stack>
+                        <Divider sx={{ my: 2, borderColor: '#edf2f7' }} />
 
-                {/* Linie despărțitoare elegantă */}
-                <Divider sx={{ my: 5, borderColor: '#edf2f7' }} />
+                        {/* --- SECȚIUNEA DATE EDITABILE --- */}
+                        <Typography className="profile-section-title">💼 Informații Publice (Editabile)</Typography>
+                        <Stack spacing={2}>
+                            <TextField label="Titlu Profesional (ex: Psiholog Clinician)" name="title" value={formData.title} onChange={handleChange} fullWidth />
+                            <TextField label="Specializare (ex: Terapie Cognitivă)" name="specialization" value={formData.specialization} onChange={handleChange} fullWidth />
+                            <TextField label="Telefon de Contact" name="phone_number" value={formData.phone_number} onChange={handleChange} fullWidth />
+                            <TextField label="Locație Cabinet (Sala / Adresa)" name="office_location" value={formData.office_location} onChange={handleChange} fullWidth />
+                            <TextField label="Scurtă descriere (Bio)" name="bio" value={formData.bio} onChange={handleChange} fullWidth multiline rows={4} placeholder="Descrie abordarea ta terapeutică..." />
+                        </Stack>
 
-                {/* --- SECȚIUNEA DATE EDITABILE --- */}
-                <Typography variant="subtitle1" sx={{ color: '#2E8B57', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold', mb: 3 }}>
-                    Informații Publice (Editabile)
-                </Typography>
+                        {/* BUTOANE UNIFICATE */}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 4 }}>
+                            <Button 
+                                variant="contained" 
+                                fullWidth
+                                className="btn-save-profile" 
+                                onClick={handleSave}
+                                disabled={saving}
+                            >
+                                {saving ? 'SE SALVEAZĂ...' : 'SALVEAZĂ PROFILUL'}
+                            </Button>
 
-                <Stack spacing={3}>
-                    <TextField 
-                        label="Titlu Profesional (ex: Psiholog Clinician)" 
-                        name="title" 
-                        value={formData.title} 
-                        onChange={handleChange} 
-                        fullWidth 
-                        sx={editableInputStyle}
-                    />
-                    <TextField 
-                        label="Specializare (ex: Terapie Cognitivă)" 
-                        name="specialization" 
-                        value={formData.specialization} 
-                        onChange={handleChange} 
-                        fullWidth 
-                        sx={editableInputStyle}
-                    />
-                    <TextField 
-                        label="Telefon de Contact" 
-                        name="phone_number" 
-                        value={formData.phone_number} 
-                        onChange={handleChange} 
-                        fullWidth 
-                        sx={editableInputStyle}
-                    />
-                    <TextField 
-                        label="Locație Cabinet (Sala / Adresa)" 
-                        name="office_location" 
-                        value={formData.office_location} 
-                        onChange={handleChange} 
-                        fullWidth 
-                        sx={editableInputStyle}
-                    />
-                    <TextField 
-                        label="Scurtă descriere (Bio)" 
-                        name="bio" 
-                        value={formData.bio} 
-                        onChange={handleChange} 
-                        fullWidth 
-                        multiline 
-                        rows={4} 
-                        placeholder="Descrie cum ajuți studenții și care este abordarea ta terapeutică..."
-                        sx={editableInputStyle}
-                    />
-                </Stack>
-
-                {/* BUTOANE */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 4 }}>
-                    <Button 
-                        variant="contained" 
-                        fullWidth
-                        className="btn-save-profile" // Folosim clasa din CSS-ul comun
-                        onClick={handleSave}
-                        disabled={saving}
-                    >
-                        {saving ? 'Se salvează...' : 'SALVEAZĂ MODIFICĂRILE'}
-                    </Button>
-
-                    <Button 
-                        variant="text" 
-                        fullWidth
-                        className="btn-back-profile" // Folosim clasa din CSS-ul comun
-                        onClick={() => navigate('/dashboard')}
-                    >
-                        Înapoi la Dashboard
-                    </Button>
-                </Box>
+                            <Button 
+                                variant="text" 
+                                fullWidth
+                                className="btn-back-profile" 
+                                onClick={() => navigate('/dashboard')}
+                            >
+                                Înapoi la Dashboard
+                            </Button>
+                        </Box>
+                    </Box>
+                </form>
             </Paper>
         </div>
     );

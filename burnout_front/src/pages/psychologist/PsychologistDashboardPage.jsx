@@ -1,20 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../auth/AuthContext'; // Importăm contextul pentru a lua ID-ul psihologului
+import { useAuth } from '../../auth/AuthContext'; 
+import api from '../../api/axios'; 
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
 const PsychologistDashboardPage = () => {
-  const { user } = useAuth(); // Extragem datele psihologului logat
+  const { user } = useAuth(); 
 
-  // Stările originale
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentTests, setStudentTests] = useState([]);
-  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Stări și Referințe noi pentru Chat
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const wsRef = useRef(null);
@@ -29,7 +27,6 @@ const PsychologistDashboardPage = () => {
     cardBg: '#ffffff'
   };
 
-  // 1. Încărcarea listei de studenți la montarea componentei
   useEffect(() => {
     fetchStudents();
   }, []);
@@ -37,57 +34,51 @@ const PsychologistDashboardPage = () => {
   const fetchStudents = async () => {
     try {
       const token = localStorage.getItem('access');
-      const response = await fetch('http://127.0.0.1:8000/api/psychologist/students/', {
+      const response = await api.get('/psychologist/students/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (response.ok) {
-        const data = await response.json();
-        setStudents(data);
+      if (response.data) {
+        setStudents(response.data);
       }
-      setLoading(false);
     } catch (err) {
       console.error("Eroare la încărcarea listei de studenți.", err);
+    } finally {
       setLoading(false);
     }
   };
 
-  // 2. Când psihologul selectează un student (Teste + Notițe)
   const handleSelectStudent = async (student) => {
     setSelectedStudent(student);
+    setChatMessages([]); 
+    
     try {
       const token = localStorage.getItem('access'); 
-      const response = await fetch(`http://127.0.0.1:8000/api/tests/?student_id=${student.id}`, {
+      const response = await api.get(`/tests/?student_id=${student.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setStudentTests(data);
-        setNote(data[0]?.psychologist_notes || '');
+      if (response.data) {
+        setStudentTests(response.data);
       }
     } catch (err) {
       console.error("Eroare la încărcarea istoricului studentului.", err);
     }
   };
 
-  // 3. Conectarea la WebSocket și Istoric Chat (Se declanșează când se schimbă selectedStudent)
   useEffect(() => {
     if (!selectedStudent || !user?.id) return;
 
-    // Aducem istoricul de mesaje din backend
     const fetchHistory = async () => {
       try {
         const token = localStorage.getItem('access');
-        const response = await fetch(`http://127.0.0.1:8000/api/messages/?other_user=${selectedStudent.user_id}`, {
+        const response = await api.get(`/messages/?other_user=${selectedStudent.user_id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (response.ok) {
-          const data = await response.json();
-          const formattedHistory = data.map(msg => ({
+        if (response.data) {
+          const formattedHistory = response.data.map(msg => ({
               sender_id: msg.sender,  
               message: msg.content   
           }));
-          
           setChatMessages(formattedHistory);
         }
       } catch (err) {
@@ -97,7 +88,6 @@ const PsychologistDashboardPage = () => {
     
     fetchHistory();
 
-    // Ne conectăm la camera WebSocket specifică studentului selectat
     const url = `ws://127.0.0.1:8000/ws/chat/${selectedStudent.user_id}/`;
     wsRef.current = new WebSocket(url);
 
@@ -109,64 +99,40 @@ const PsychologistDashboardPage = () => {
       }]);
     };
 
-    // Închidem conexiunea când schimbăm studentul sau ieșim de pe pagină
     return () => {
       if (wsRef.current) wsRef.current.close();
     };
   }, [selectedStudent, user?.id]);
 
-  // 4. Auto-Scroll pentru chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  // 5. Trimitere mesaj nou
   const handleSendMessage = () => {
     if (currentMessage.trim() === "" || !selectedStudent || !wsRef.current || !user?.id) return;
 
     const messageData = {
       message: currentMessage,
-      sender_id: user.id, // ID-ul psihologului
-      receiver_id: selectedStudent.user_id // ID-ul studentului
+      sender_id: user.id, 
+      receiver_id: selectedStudent.user_id 
     };
 
     wsRef.current.send(JSON.stringify(messageData));
     setCurrentMessage('');
   };
 
-  // 6. Salvare Notițe oficiale
-  const handleSaveNote = async () => {
-    if (!studentTests[0]) return;
-    try {
-      const token = localStorage.getItem('access');
-      const response = await fetch(`http://127.0.0.1:8000/api/psychologist/tests/${studentTests[0].id}/notes/`, {
-        method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ psychologist_notes: note })
-      });
-      
-      if (response.ok) {
-        alert("Recomandarea a fost salvată și trimisă studentului!");
-        fetchStudents(); 
-      } else {
-        alert("Eroare la salvarea notiței.");
-      }
-    } catch (err) {
-      console.error("Eroare la salvare", err);
-    }
-  };
-
-  // Logica pentru LineChart
   const getLineData = () => {
-    return [...studentTests].reverse().map(res => ({
-      date: new Date(res.taken_at).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' }),
-      nivel: res.predicted_cluster.toLowerCase().includes('ridicat') ? 3 : 
-             res.predicted_cluster.toLowerCase().includes('moderat') ? 2 : 1,
-      diagnostic: res.predicted_cluster
-    }));
+    if (!studentTests || studentTests.length === 0) return [];
+    
+    return [...studentTests].reverse().map(res => {
+      const cluster = res.predicted_cluster ? res.predicted_cluster.toLowerCase() : '';
+      return {
+        date: new Date(res.taken_at).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short' }),
+        nivel: cluster.includes('ridicat') ? 3 : 
+               cluster.includes('moderat') ? 2 : 1,
+        diagnostic: res.predicted_cluster || 'Necunoscut'
+      };
+    });
   };
 
   if (loading) return <div style={{ padding: '40px', textAlign: 'center', fontSize: '1.2rem', color: '#718096' }}>Se încarcă baza de date a instituției...</div>;
@@ -287,10 +253,10 @@ const PsychologistDashboardPage = () => {
                     <p style={{ fontSize: '0.85rem', color: '#a0aec0', margin: '0 0 5px 0', textTransform: 'uppercase' }}>Status Curent</p>
                     <span style={{ 
                       padding: '8px 20px', borderRadius: '30px', fontWeight: '800', fontSize: '0.95rem',
-                      backgroundColor: studentTests[0]?.predicted_cluster.toLowerCase().includes('ridicat') ? '#fff5f5' : 
-                                       studentTests[0]?.predicted_cluster.toLowerCase().includes('moderat') ? '#fffaf0' : '#f0fdf4',
-                      color: studentTests[0]?.predicted_cluster.toLowerCase().includes('ridicat') ? colors.danger : 
-                             studentTests[0]?.predicted_cluster.toLowerCase().includes('moderat') ? colors.warning : colors.success,
+                      backgroundColor: studentTests[0]?.predicted_cluster?.toLowerCase().includes('ridicat') ? '#fff5f5' : 
+                                       studentTests[0]?.predicted_cluster?.toLowerCase().includes('moderat') ? '#fffaf0' : '#f0fdf4',
+                      color: studentTests[0]?.predicted_cluster?.toLowerCase().includes('ridicat') ? colors.danger : 
+                             studentTests[0]?.predicted_cluster?.toLowerCase().includes('moderat') ? colors.warning : colors.success,
                     }}>
                       {studentTests[0]?.predicted_cluster || 'FĂRĂ EVALUĂRI'}
                     </span>
@@ -318,7 +284,7 @@ const PsychologistDashboardPage = () => {
                 )}
               </div>
 
-              {/* ZONA DE CHAT LIVE (NOUĂ) */}
+              {/* ZONA DE CHAT LIVE */}
               <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                   <div style={{ fontSize: '1.5rem' }}>💬</div>

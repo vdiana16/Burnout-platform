@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext'; 
+import api from '../../api/axios'; // IMPORTUL LIPSĂ A FOST ADĂUGAT
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis 
@@ -32,11 +33,9 @@ const StudentDashboardPage = () => {
     radarStroke: '#6b46c1'
   };
 
+  // 1. CONEXIUNEA LA CHAT (WEBSOCKET)
   useEffect(() => {
       if (!user?.id) return;
-
-      // Conectare la WebSocket folosind ID-ul studentului curent
-      // Asigură-te că URL-ul coincide cu cel din routing.py: ws/chat/ID/
       const url = `ws://127.0.0.1:8000/ws/chat/${user.id}/`;
       socketRef.current = new WebSocket(url);
 
@@ -59,9 +58,6 @@ const StudentDashboardPage = () => {
   const sendMessage = () => {
       if (newMessage.trim() === "" || !socketRef.current) return;
 
-      // NOTĂ: receiver_id trebuie să fie ID-ul psihologului tău. 
-      // Dacă ai un singur psiholog pe instituție, poți să-l preiei din profilul de student (dacă l-ai adăugat în serializer)
-      // Momentan punem un ID generic sau îl poți extrage din datele primite de la profil.
       const messageData = {
           message: newMessage,
           sender_id: user.id,
@@ -76,19 +72,19 @@ const StudentDashboardPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // 2. PRELUAREA DATELOR ȘI VERIFICAREA PROFILULUI (Logica unificată)
   useEffect(() => {
     const fetchResults = async () => {
       try {
         const token = localStorage.getItem('access');
-        const response = await fetch('http://127.0.0.1:8000/api/tests/', {
+        const response = await api.get('/tests/', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (response.ok) {
-          const data = await response.json();
-          setResults(data);
+        if (response.data) {
+          setResults(response.data);
         }
       } catch (err) {
-        console.error("Eroare la încărcarea datelor.");
+        console.error("Eroare la încărcarea datelor.", err);
       } finally {
         setLoading(false);
       }
@@ -97,49 +93,52 @@ const StudentDashboardPage = () => {
     const checkProfile = async () => {
         try {
             const token = localStorage.getItem('access');
-            const response = await fetch('http://127.0.0.1:8000/api/students/me/', {
+            const response = await api.get('/students/me/', {
               headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.education_level || data.age) {
-                    setIsProfileComplete(true);
-                }
-                if (data.assigned_psychologist && data.assigned_psychologist.id) {
-                    setPsychologistId(data.assigned_psychologist.id);
-                }
+            
+            const data = response.data;
+            
+            // Redirecționare dacă profilul este incomplet
+            if (!data.age || !data.academic_gpa) {
+                alert("Bine ai venit! Te rugăm să îți completezi profilul pentru a putea folosi platforma.");
+                navigate('/student-profile');
+                return; 
             }
+            
+            // Profil complet -> activăm chestionarele și chat-ul
+            setIsProfileComplete(true);
+            if (data.assigned_psychologist && data.assigned_psychologist.id) {
+                setPsychologistId(data.assigned_psychologist.id);
+            }
+            
         } catch (err) {
-            console.error("Eroare verificare profil.");
+            console.error("Eroare verificare profil.", err);
         }
     }
 
     const fetchMessagesHistory = async () => {
         try {
             const token = localStorage.getItem('access');
-            // Aici trebuie să te asiguri că ai făcut o rută în Django (ex: /api/messages/)
-            // care returnează mesajele dintre userul curent și psiholog.
-            const response = await fetch('http://127.0.0.1:8000/api/messages/', {
+            const response = await api.get('/messages/', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (response.ok) {
-                const data = await response.json();
-                const formattedHistory = data.map(msg => ({
+            if (response.data) {
+                const formattedHistory = response.data.map(msg => ({
                     sender_id: msg.sender,
                     message: msg.content
                 }));
-                
                 setMessages(formattedHistory);
             }
         } catch (err) {
-            console.error("Eroare la încărcarea istoricului de mesaje.");
+            console.error("Eroare la încărcarea istoricului de mesaje.", err);
         }
     };
 
-    fetchResults();
     checkProfile();
+    fetchResults();
     fetchMessagesHistory();
-  }, []);
+  }, [navigate]);
 
   const handleStartQuiz = () => {
       if (!isProfileComplete) {
@@ -192,7 +191,6 @@ const StudentDashboardPage = () => {
   const getRadarData = (responses) => {
     if (!responses) return [];
 
-    // Funcție robustă care suportă atât Dicționar (nou) cât și Listă (teste vechi din baza de date)
     const getVal = (qNum) => {
         if (Array.isArray(responses)) {
             const item = responses.find(r => r.question_order === qNum);
@@ -202,7 +200,6 @@ const StudentDashboardPage = () => {
         }
     };
 
-    // Calculăm mediile exact ca în Backend pentru Modelul XGBoost
     return [
         { factor: 'Procrastinare', scor: (getVal(16) + getVal(17)) / 2 },
         { factor: 'Stres Digital', scor: (getVal(28) + getVal(29)) / 2 },
@@ -214,9 +211,7 @@ const StudentDashboardPage = () => {
   };
 
   const radarData = lastResult ? getRadarData(lastResult.responses) : [];
-  // Găsim dinamic care este cel mai mare scor pentru a oferi un feedback inteligent
   const topFactor = radarData.length > 0 ? radarData.reduce((prev, current) => (prev.scor > current.scor) ? prev : current) : null;
-
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1000px', margin: '0 auto', color: colors.text }}>
@@ -278,13 +273,12 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 4. ANALIZĂ DETALIATĂ (RADAR CHART) - NOU! */}
+      {/* 3. ANALIZĂ DETALIATĂ (RADAR CHART) */}
       {lastResult && radarData.length > 0 && (
         <div style={{ marginBottom: '40px' }}>
           <h2 style={{ fontSize: '1.4rem', marginBottom: '20px', fontWeight: '800' }}>Amprenta Factorilor de Risc</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px' }}>
             
-            {/* Partea Stângă - Graficul */}
             <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <ResponsiveContainer width="100%" height={300}>
                 <RadarChart cx="50%" cy="50%" outerRadius="65%" data={radarData}>
@@ -297,7 +291,6 @@ const StudentDashboardPage = () => {
               </ResponsiveContainer>
             </div>
 
-            {/* Partea Dreaptă - Insight-uri generate automat */}
             <div style={{ backgroundColor: '#faf5ff', padding: '30px', borderRadius: '24px', border: '1px solid #e9d8fd', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <h4 style={{ margin: '0 0 15px 0', fontSize: '1.2rem', color: '#6b46c1' }}>Atenție la:</h4>
               <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🎯</div>
@@ -313,7 +306,7 @@ const StudentDashboardPage = () => {
         </div>
       )}
 
-      {/* 5. GRAFIC EVOLUȚIE (LINE CHART) */}
+      {/* 4. GRAFIC EVOLUȚIE (LINE CHART) */}
       <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8', marginBottom: '40px' }}>
         <h3 style={{ marginTop: 0, marginBottom: '30px', fontSize: '1.2rem', fontWeight: '700' }}>Evoluția Generală în Timp</h3>
         
@@ -342,13 +335,12 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 5. CHAT LIVE CU PSIHOLOGUL (În loc de Feedback static) */}
+      {/* 5. CHAT LIVE CU PSIHOLOGUL */}
       <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', marginBottom: '40px' }}>
         <h2 style={{ fontSize: '1.6rem', marginBottom: '20px', fontWeight: '800' }}>
           Consiliere Live 💬
         </h2>
         
-        {/* Fereastra de mesaje */}
         <div style={{ 
           height: '350px', overflowY: 'auto', border: '1px solid #edf2f7', 
           borderRadius: '16px', padding: '20px', marginBottom: '20px', 
@@ -374,7 +366,6 @@ const StudentDashboardPage = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Zona de input */}
         <div style={{ display: 'flex', gap: '12px' }}>
           <input 
             type="text" 

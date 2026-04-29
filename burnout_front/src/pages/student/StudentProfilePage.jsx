@@ -115,11 +115,15 @@ const StudentProfilePage = () => {
                                     <MenuItem value="Anul 1">Anul 1</MenuItem>
                                     <MenuItem value="Anul 2">Anul 2</MenuItem>
                                     <MenuItem value="Anul 3">Anul 3</MenuItem>
+                                    <MenuItem value="Anul 4+">Anul 4+</MenuItem>
                                 </TextField>
                             </Box>
                             <TextField select label="Domeniu" name="field" fullWidth value={formData.field} onChange={handleChange}>
-                                <MenuItem value="Real">Real / Inginerie</MenuItem>
-                                <MenuItem value="Uman">Uman / Social</MenuItem>
+                                <MenuItem value="Real">Real / Inginerie / Științe Exacte</MenuItem>
+                                <MenuItem value="Uman">Uman / Social / Litere / Psihologie</MenuItem>
+                                <MenuItem value="Medicină">Medicină / Sănătate</MenuItem>
+                                <MenuItem value="Economic">Economic / Business</MenuItem>
+                                <MenuItem value="Vocațional">Vocațional / Arte / Sport</MenuItem>
                             </TextField>
                         </Box>
 

@@ -28,9 +28,9 @@ export const validateRegisterForm = (data) => {
   }
 
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-  if (!formData.password) {
+  if (!data.password) {
       errors.password = "Parola este obligatorie.";
-  } else if (!passwordRegex.test(formData.password)) {
+  } else if (!passwordRegex.test(data.password)) {
       errors.password = "Parola trebuie să aibă min. 8 caractere, o literă mare, o cifră și un caracter special (@$!%*?&).";
   }
 
