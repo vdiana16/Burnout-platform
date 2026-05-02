@@ -243,20 +243,25 @@ const PsychologistDashboardPage = () => {
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
               
               {/* HEADER PROFIL STUDENT */}
-              <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+             <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
+                {/* Am adăugat flexWrap și gap aici pentru ecrane mai mici */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                   <div>
                     <h2 style={{ margin: '0 0 8px 0', fontSize: '1.8rem', fontWeight: '800' }}>{selectedStudent.first_name} {selectedStudent.last_name}</h2>
                     <p style={{ color: '#718096', margin: 0, fontSize: '1rem' }}>📧 {selectedStudent.email} • 📚 {selectedStudent.education_level}</p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: '0.85rem', color: '#a0aec0', margin: '0 0 5px 0', textTransform: 'uppercase' }}>Status Curent</p>
+                  
+                  {/* Am transformat acest container într-un flexbox tip coloană */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#a0aec0', margin: 0, textTransform: 'uppercase' }}>Status Curent</p>
                     <span style={{ 
+                      display: 'inline-block', /* Aceasta previne suprapunerea pe verticală */
+                      whiteSpace: 'nowrap', /* Previne ruperea textului pe 2 rânduri */
                       padding: '8px 20px', borderRadius: '30px', fontWeight: '800', fontSize: '0.95rem',
                       backgroundColor: studentTests[0]?.predicted_cluster?.toLowerCase().includes('ridicat') ? '#fff5f5' : 
-                                       studentTests[0]?.predicted_cluster?.toLowerCase().includes('moderat') ? '#fffaf0' : '#f0fdf4',
+                                      studentTests[0]?.predicted_cluster?.toLowerCase().includes('moderat') ? '#fffaf0' : '#f0fdf4',
                       color: studentTests[0]?.predicted_cluster?.toLowerCase().includes('ridicat') ? colors.danger : 
-                             studentTests[0]?.predicted_cluster?.toLowerCase().includes('moderat') ? colors.warning : colors.success,
+                            studentTests[0]?.predicted_cluster?.toLowerCase().includes('moderat') ? colors.warning : colors.success,
                     }}>
                       {studentTests[0]?.predicted_cluster || 'FĂRĂ EVALUĂRI'}
                     </span>

@@ -71,13 +71,12 @@ const RegisterPage = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
         role: formData.role,
-        institution_id: formData.institution 
+        institution: formData.institution 
       };      
       
       const success = await register(dataToSend);
       
       if (success) {
-        alert("Cont creat cu succes!");
         navigate('/login'); 
       }
     } catch (err) {

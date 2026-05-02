@@ -246,7 +246,7 @@ const QuizPage = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontWeight: '600', color: '#2d3748' }}>Progres Evaluare</span>
                 <span style={{ fontWeight: '800', color: '#2E8B57' }}>
-                    {answeredQuestions} / {totalQuestions}
+                    {Math.round(progress)}% 
                 </span>
             </div>
             

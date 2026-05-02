@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios'; 
-import { Paper, Typography, TextField, Button, MenuItem, Alert, Box } from '@mui/material';
+import { Paper, Typography, TextField, Button, MenuItem, Alert, Box, LinearProgress } from '@mui/material';
 import { useAuth } from '../../auth/AuthContext'; 
 import '../../styles/StudentProfile.css'; 
 

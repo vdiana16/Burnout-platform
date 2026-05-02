@@ -99,14 +99,11 @@ const StudentDashboardPage = () => {
             
             const data = response.data;
             
-            // Redirecționare dacă profilul este incomplet
             if (!data.age || !data.academic_gpa) {
-                alert("Bine ai venit! Te rugăm să îți completezi profilul pentru a putea folosi platforma.");
                 navigate('/student-profile');
                 return; 
             }
             
-            // Profil complet -> activăm chestionarele și chat-ul
             setIsProfileComplete(true);
             if (data.assigned_psychologist && data.assigned_psychologist.id) {
                 setPsychologistId(data.assigned_psychologist.id);
@@ -142,7 +139,6 @@ const StudentDashboardPage = () => {
 
   const handleStartQuiz = () => {
       if (!isProfileComplete) {
-          alert("Te rugăm să îți completezi profilul academic înainte de a da primul test!");
           navigate('/student-profile'); 
       } else {
           navigate('/quiz');
