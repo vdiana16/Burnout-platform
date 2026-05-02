@@ -17,11 +17,10 @@ const StudentProfilePage = () => {
 
     const [formData, setFormData] = useState({
         age: '',
-        education_level: 'Liceu',
-        study_stage: 'Anul 1',
-        field: 'Real',
+        education_level: '',
+        study_stage: '',
+        field: '',
         academic_gpa: '',
-        employment: 'Nu'
     });
 
     useEffect(() => {
@@ -36,11 +35,10 @@ const StudentProfilePage = () => {
                     const data = response.data;
                     setFormData({
                         age: data.age || '',
-                        education_level: data.education_level || 'Liceu',
-                        study_stage: data.study_stage || 'Anul 1',
-                        field: data.field || 'Real',
+                        education_level: data.education_level || '',
+                        study_stage: data.study_stage || '',
+                        field: data.field || '',
                         academic_gpa: data.academic_gpa || '',
-                        employment: data.employment || 'Nu'
                     });
 
                     if (data.assigned_psychologist) {
@@ -83,7 +81,7 @@ const StudentProfilePage = () => {
     };
 
     const calculateProgress = () => {
-        const fieldsToCheck = ['age', 'education_level', 'study_stage', 'academic_gpa'];
+        const fieldsToCheck = ['age', 'education_level', 'study_stage', 'academic_gpa', 'field'];
         let filledCount = 0;
         fieldsToCheck.forEach(field => {
             if (formData[field] !== null && formData[field] !== undefined && String(formData[field]).trim() !== '') {
@@ -95,6 +93,16 @@ const StudentProfilePage = () => {
 
     const progress = calculateProgress();
 
+    const handleBackToDashboard = () => {
+        if (!formData.age || !formData.academic_gpa || formData.age === '' || formData.academic_gpa === '') {
+            setError('Pentru a accesa Dashboard-ul trebuie să îți completezi profilul.');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        
+        navigate('/dashboard');
+    };
+
     if (loading) return <Typography sx={{ p: 4, textAlign: 'center' }}>Se încarcă...</Typography>;
 
     return (
@@ -102,6 +110,9 @@ const StudentProfilePage = () => {
             <Paper className="profile-card-paper" elevation={0}>
                 <Typography variant="h4" className="profile-header-title">Profil Student</Typography>
                 
+                {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
+                {success && <Alert severity="success" sx={{ mb: 3, borderRadius: '12px' }}>{success}</Alert>}
+
                 <Box sx={{ mb: 4, backgroundColor: '#f0fdf4', p: 3, borderRadius: '16px', border: '1px solid #c6f6d5' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="body2" sx={{ fontWeight: '800', color: progress === 100 ? '#276749' : '#2f855a' }}>
@@ -158,7 +169,7 @@ const StudentProfilePage = () => {
                             <Button type="submit" fullWidth className="btn-save-profile" disabled={saving}>
                                 {saving ? 'SE SALVEAZĂ...' : 'SALVEAZĂ PROFILUL'}
                             </Button>
-                            <Button variant="text" fullWidth className="btn-back-profile" onClick={() => navigate('/dashboard')}>
+                            <Button variant="text" fullWidth className="btn-back-profile" onClick={handleBackToDashboard}>
                                 Înapoi la Dashboard
                             </Button>
                         </Box>

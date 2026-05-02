@@ -337,54 +337,65 @@ const StudentDashboardPage = () => {
           Consiliere Live 💬
         </h2>
         
-        <div style={{ 
-          height: '350px', overflowY: 'auto', border: '1px solid #edf2f7', 
-          borderRadius: '16px', padding: '20px', marginBottom: '20px', 
-          backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '10px' 
-        }}>
-          {messages.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#a0aec0', margin: 'auto' }}>
-              Începe o conversație cu psihologul tău pentru suport personalizat.
+        {/* Verificăm dacă există un psiholog alocat */}
+        {!psychologistId ? (
+          <div style={{ padding: '30px', backgroundColor: '#fff5f5', borderRadius: '16px', border: '1px solid #fed7d7', color: '#c53030', textAlign: 'center' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '10px' }}>⚠️</div>
+              <h3 style={{ margin: '0 0 10px 0' }}>Niciun psiholog alocat instituției tale</h3>
+              <p style={{ margin: 0 }}>În prezent, universitatea ta nu are un psiholog înregistrat pe platformă. Modulul de mesagerie va fi activat automat imediat ce un specialist se va alătura.</p>
+          </div>
+        ) : (
+          <>
+            <div style={{ 
+              height: '350px', overflowY: 'auto', border: '1px solid #edf2f7', 
+              borderRadius: '16px', padding: '20px', marginBottom: '20px', 
+              backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '10px' 
+            }}>
+              {messages.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#a0aec0', margin: 'auto' }}>
+                  Începe o conversație cu psihologul tău pentru suport personalizat.
+                </div>
+              ) : (
+                messages.map((msg, index) => (
+                  <div key={index} style={{ 
+                    alignSelf: msg.sender_id === user.id ? 'flex-end' : 'flex-start',
+                    backgroundColor: msg.sender_id === user.id ? colors.primary : '#ffffff',
+                    color: msg.sender_id === user.id ? 'white' : colors.text,
+                    padding: '10px 18px', borderRadius: '18px', maxWidth: '75%',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: msg.sender_id === user.id ? 'none' : '1px solid #edf2f7'
+                  }}>
+                    {msg.message}
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
             </div>
-          ) : (
-            messages.map((msg, index) => (
-              <div key={index} style={{ 
-                alignSelf: msg.sender_id === user.id ? 'flex-end' : 'flex-start',
-                backgroundColor: msg.sender_id === user.id ? colors.primary : '#ffffff',
-                color: msg.sender_id === user.id ? 'white' : colors.text,
-                padding: '10px 18px', borderRadius: '18px', maxWidth: '75%',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.05)', border: msg.sender_id === user.id ? 'none' : '1px solid #edf2f7'
-              }}>
-                {msg.message}
-              </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <input 
-            type="text" 
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Scrie un mesaj psihologului..."
-            style={{ 
-              flex: 1, padding: '14px 20px', borderRadius: '30px', 
-              border: '1px solid #e2e8f0', outline: 'none', fontSize: '1rem' 
-            }}
-          />
-          <button 
-            onClick={sendMessage}
-            style={{ 
-              padding: '12px 28px', backgroundColor: colors.primary, 
-              color: 'white', border: 'none', borderRadius: '30px', 
-              cursor: 'pointer', fontWeight: 'bold', transition: '0.2s'
-            }}
-          >
-            Trimite
-          </button>
-        </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <input 
+                type="text" 
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder="Scrie un mesaj psihologului..."
+                style={{ 
+                  flex: 1, padding: '14px 20px', borderRadius: '30px', 
+                  border: '1px solid #e2e8f0', outline: 'none', fontSize: '1rem' 
+                }}
+              />
+              <button 
+                onClick={sendMessage}
+                style={{ 
+                  padding: '12px 28px', backgroundColor: colors.primary, 
+                  color: 'white', border: 'none', borderRadius: '30px', 
+                  cursor: 'pointer', fontWeight: 'bold', transition: '0.2s'
+                }}
+              >
+                Trimite
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
     </div>

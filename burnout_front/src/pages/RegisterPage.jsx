@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import api from '../api/axios';
 import { 
   Container, Paper, TextField, Button, Typography, Box, Alert, MenuItem, 
-  IconButton, InputAdornment 
+  IconButton, InputAdornment, Autocomplete 
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import '../styles/RegisterPage.css';
@@ -71,7 +71,7 @@ const RegisterPage = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
         role: formData.role,
-        institution: formData.institution 
+        institution_name: formData.institution
       };      
       
       const success = await register(dataToSend);
@@ -217,24 +217,27 @@ const RegisterPage = () => {
               }}
             />
             
-            <TextField
-              select
-              label="Instituție"
-              name="institution"
-              fullWidth
-              required
+            <Autocomplete
+              freeSolo
+              options={institutions.map((inst) => inst.name)}
               value={formData.institution}
-              onChange={handleChange}
-              className="register-input"
-              error={!!fieldErrors.institution}
-              helperText={getErrorText('institution')}
-            >
-              {institutions.map((inst) => (
-                <MenuItem key={inst.id} value={inst.id}>
-                  {inst.name}
-                </MenuItem>
-              ))}
-            </TextField>
+              onInputChange={(event, newInputValue) => {
+                setFormData({ ...formData, institution: newInputValue });
+                if (fieldErrors.institution) {
+                  setFieldErrors({ ...fieldErrors, institution: null });
+                }
+              }}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label="Instituție (Alege sau scrie una nouă)" 
+                  className="register-input"
+                  required
+                  error={!!fieldErrors.institution}
+                  helperText={getErrorText('institution')}
+                />
+              )}
+            />
 
             <TextField
               select

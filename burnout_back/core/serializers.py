@@ -98,29 +98,45 @@ class PsychologistProfileSerializer(serializers.ModelSerializer):
         ]
 
 class RegisterSerializer(serializers.ModelSerializer):
-    institution = serializers.PrimaryKeyRelatedField(
-        queryset=Institution.objects.all(), 
-        required=False
+    # 1. Definim câmpul clar ca text, nu ca ID
+    institution_name = serializers.CharField(
+        write_only=True, 
+        required=False, 
+        allow_null=True,
+        allow_blank=True
     )
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'email', 'first_name', 'last_name', 'role', 'institution')
+        # 2. FOARTE IMPORTANT: Aici trebuie să scrie 'institution_name', NU 'institution'
+        fields = ('username', 'password', 'email', 'first_name', 'last_name', 'role', 'institution_name')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
         password = data.get('password')
-        
         try:
             validate_password(password)
         except DjangoValidationError as e:
             raise serializers.ValidationError({"password": list(e.messages)})
-            
         return data
 
     @transaction.atomic
     def create(self, validated_data):
-        institution = validated_data.pop('institution', None)        
+        # 3. Extragem textul venit din React
+        institution_name = validated_data.pop('institution_name', None)        
+        
+        # MESAJ DE DEBUG: Va apărea în terminalul tău unde rulează serverul de Django
+        print(f"\n--- DEBUG: Numele instituției primit este: '{institution_name}' ---\n")
+
+        inst_obj = None
+        # 4. Creăm instituția dacă există un nume
+        if institution_name and institution_name.strip() != "":
+            inst_obj, created = Institution.objects.get_or_create(name=institution_name.strip())
+            if created:
+                print(f"--- DEBUG: Am creat cu succes o NOUĂ instituție: {inst_obj.name} ---")
+            else:
+                print(f"--- DEBUG: Am găsit instituția deja existentă: {inst_obj.name} ---")
+        
         user = User.objects.create(
             username=validated_data['username'],
             email=validated_data.get('email', ''),
@@ -131,16 +147,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
 
+        # 5. Asociem profilului
         if user.role == 'STUDENT':
-            StudentProfile.objects.create(
-                user=user, 
-                institution=institution, 
-            )
+            StudentProfile.objects.create(user=user, institution=inst_obj)
         elif user.role == 'PSYCHOLOGIST':
-            PsychologistProfile.objects.create(
-                user=user, 
-                institution=institution
-            )
+            PsychologistProfile.objects.create(user=user, institution=inst_obj)
 
         return user
     
