@@ -21,6 +21,7 @@ const StudentProfilePage = () => {
         study_stage: '',
         field: '',
         academic_gpa: '',
+        employment: ''
     });
 
     useEffect(() => {
@@ -39,6 +40,7 @@ const StudentProfilePage = () => {
                         study_stage: data.study_stage || '',
                         field: data.field || '',
                         academic_gpa: data.academic_gpa || '',
+                        employment: data.employment || ''
                     });
 
                     if (data.assigned_psychologist) {
@@ -81,7 +83,7 @@ const StudentProfilePage = () => {
     };
 
     const calculateProgress = () => {
-        const fieldsToCheck = ['age', 'education_level', 'study_stage', 'academic_gpa', 'field'];
+        const fieldsToCheck = ['age', 'education_level', 'study_stage', 'academic_gpa', 'field', 'employment'];
         let filledCount = 0;
         fieldsToCheck.forEach(field => {
             if (formData[field] !== null && formData[field] !== undefined && String(formData[field]).trim() !== '') {
@@ -161,6 +163,12 @@ const StudentProfilePage = () => {
                                 <MenuItem value="Medicină">Medicină / Sănătate</MenuItem>
                                 <MenuItem value="Economic">Economic / Business</MenuItem>
                                 <MenuItem value="Vocațional">Vocațional / Arte / Sport</MenuItem>
+                            </TextField>
+
+                            <TextField select label="Lucrezi în paralel cu studiile?" name="employment" fullWidth value={formData.employment} onChange={handleChange}>
+                                <MenuItem value="Nu">Nu</MenuItem>
+                                <MenuItem value="Part-time">Part-time</MenuItem>
+                                <MenuItem value="Full-time">Full-time</MenuItem>
                             </TextField>
                         </Box>
 

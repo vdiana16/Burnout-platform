@@ -51,7 +51,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'institution', 'age', 
             'education_level', 'study_stage', 'field', 
-            'academic_gpa','assigned_psychologist'
+            'academic_gpa','employment', 'assigned_psychologist'
         ]
 
     def get_assigned_psychologist(self, obj):
@@ -68,7 +68,6 @@ class StudentProfileSerializer(serializers.ModelSerializer):
 
 class StudentListSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source='user.id', read_only=True)
-    
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
@@ -76,14 +75,19 @@ class StudentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StudentProfile
-        fields = ['id', 'user_id', 'first_name', 'last_name', 'email', 'education_level', 'study_stage', 'field', 'last_diagnostic']
+        # Am adăugat aici 'age', 'academic_gpa' și 'employment'
+        fields = [
+            'id', 'user_id', 'first_name', 'last_name', 'email', 
+            'education_level', 'study_stage', 'field', 'last_diagnostic',
+            'age', 'academic_gpa', 'employment'
+        ]
 
     def get_last_diagnostic(self, obj):
         ultimul_test = TestResult.objects.filter(student=obj).order_by('-taken_at').first()
         if ultimul_test:
             return ultimul_test.predicted_cluster
         return "Fără evaluări"
-
+    
 class PsychologistProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)

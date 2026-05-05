@@ -12,6 +12,8 @@ const PsychologistDashboardPage = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentTests, setStudentTests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTestIndex, setSelectedTestIndex] = useState(0);
+  const [questionsMap, setQuestionsMap] = useState({});
 
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
@@ -29,6 +31,7 @@ const PsychologistDashboardPage = () => {
 
   useEffect(() => {
     fetchStudents();
+    fetchQuestions(); 
   }, []);
 
   const fetchStudents = async () => {
@@ -47,9 +50,29 @@ const PsychologistDashboardPage = () => {
     }
   };
 
+  const fetchQuestions = async () => {
+    try {
+      const token = localStorage.getItem('access');
+      const response = await api.get('/questions/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.data) {
+          const qMap = {};
+          response.data.forEach(q => {
+            qMap[`Q${q.order}`] = { text: q.text }; 
+          });
+          setQuestionsMap(qMap);
+        }
+    } catch (err) {
+      console.error("Eroare la încărcarea întrebărilor.", err);
+    }
+  };
+
   const handleSelectStudent = async (student) => {
     setSelectedStudent(student);
     setChatMessages([]); 
+    setSelectedTestIndex(0);
     
     try {
       const token = localStorage.getItem('access'); 
@@ -288,6 +311,91 @@ const PsychologistDashboardPage = () => {
                   </div>
                 )}
               </div>
+
+              {/* RĂSPUNSURILE LA EVALUĂRI (CU ISTORIC) */}
+              {studentTests.length > 0 && (
+                <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
+                  
+                  {/* Header-ul secțiunii cu Dropdown-ul de selecție a datei */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+                    <h3 style={{ margin: 0, color: '#2d3748', fontSize: '1.2rem', fontWeight: '700' }}>
+                      Răspunsuri la chestionar
+                    </h3>
+                    
+                    <select 
+                      value={selectedTestIndex}
+                      onChange={(e) => setSelectedTestIndex(Number(e.target.value))}
+                      style={{ 
+                        padding: '10px 15px', borderRadius: '12px', border: '1px solid #e2e8f0', 
+                        outline: 'none', fontWeight: 'bold', color: colors.primary, cursor: 'pointer',
+                        backgroundColor: '#f8fafc'
+                      }}
+                    >
+                      {studentTests.map((test, index) => (
+                        <option key={test.id} value={index}>
+                          {new Date(test.taken_at).toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} 
+                          {' - '} {test.predicted_cluster}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Lista cu Răspunsurile efective */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {studentTests[selectedTestIndex] && studentTests[selectedTestIndex].responses ? (
+                      [
+                        // 1. Adăugăm manual cele 6 variabile din profilul studentului selectat
+                        { label: "Vârstă Student", value: selectedStudent?.age },
+                        { label: "Medie Academică (GPA)", value: selectedStudent?.academic_gpa },
+                        { label: "Nivel Educație", value: selectedStudent?.education_level },
+                        { label: "An de Studiu", value: selectedStudent?.study_stage },
+                        { label: "Domeniu de Studiu", value: selectedStudent?.field },
+                        { label: "Statut Angajare", value: selectedStudent?.employment },
+                        
+                        // 2. Extragem restul variabilelor din test (Q1, Q2, etc.) și le adăugăm în aceeași listă
+                        ...Object.entries(studentTests[selectedTestIndex].responses).map(([key, val]) => ({
+                          label: questionsMap[key]?.text || `Întrebarea ${key.replace('Q', '')}`,
+                          value: val
+                        }))
+                      ].map((item, idx) => (
+                        <div key={idx} style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          backgroundColor: idx < 6 ? '#edf2f7' : '#f8fafc', // Primele 6 variabile vor avea un fundal gri ușor diferit pentru a le separa vizual
+                          padding: '12px 20px', 
+                          borderRadius: '12px', 
+                          border: '1px solid #edf2f7',
+                          marginBottom: '4px'
+                        }}>
+                          {/* Numele variabilei sau textul întrebării */}
+                          <div style={{ fontSize: '0.95rem', color: '#4a5568', flex: 1, paddingRight: '15px', fontWeight: idx < 6 ? '700' : '500' }}>
+                            {item.label}
+                          </div>
+                          
+                          {/* Valoarea variabilei */}
+                          <div style={{ 
+                            fontSize: '1.1rem', 
+                            color: '#2d3748',
+                            fontWeight: '800',
+                            backgroundColor: 'white',
+                            padding: '6px 16px',
+                            borderRadius: '8px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                            minWidth: '45px',
+                            textAlign: 'center',
+                            border: '1px solid #e2e8f0'
+                          }}>
+                            {item.value || 'N/A'}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ color: '#a0aec0' }}>Datele nu sunt disponibile pentru acest test.</div>
+                    )}
+                  </div>
+                  </div>
+              )}
 
               {/* ZONA DE CHAT LIVE */}
               <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>

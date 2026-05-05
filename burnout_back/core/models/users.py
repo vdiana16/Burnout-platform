@@ -49,6 +49,12 @@ class StudentProfile(models.Model):
     )
     field = models.CharField(max_length=50, choices=FIELD_CHOICES, null=True, blank=True)    
     academic_gpa = models.FloatField(null=True, blank=True)
+    EMPLOYMENT_CHOICES = (
+        ('Nu', 'Nu'),
+        ('Part-time', 'Part-time'),
+        ('Full-time', 'Full-time')
+    )
+    employment = models.CharField(max_length=20, choices=EMPLOYMENT_CHOICES, null=True, blank=True)
     
     def __str__(self):
         return f"Profil: {self.user.username}"

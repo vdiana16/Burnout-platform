@@ -111,7 +111,7 @@ const RegisterPage = () => {
       <Container maxWidth="sm">
         <Paper className="register-paper" elevation={0}>
           <Typography variant="h4" className="register-title">
-            Creează Cont
+            Înregistrare
           </Typography>
           
           {generalError && <Alert severity="error" sx={{ mb: 2, borderRadius: '10px' }}>{generalError}</Alert>}
@@ -254,18 +254,13 @@ const RegisterPage = () => {
               <MenuItem value="PSYCHOLOGIST">Psiholog</MenuItem>
             </TextField>
 
-            <Button 
-              type="submit" 
-              className="register-button" 
-              fullWidth 
-              variant="contained"
-            >
-              SIGN UP
+            <Button type="submit" className="register-button" fullWidth variant="contained">
+              Creează cont
             </Button>
           </form>
           
           <Box className="register-footer">
-            Ai deja cont? <Link to="/login" className="register-link">LOGIN</Link>
+            Ai deja cont? <Link to="/login" className="register-link">Conectează-te</Link>
           </Box>
         </Paper>
       </Container>

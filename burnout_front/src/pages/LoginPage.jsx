@@ -10,10 +10,9 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  const { login } = useAuth(); // Nu mai depindem de isAuthenticated aici pentru redirect
+  const { login } = useAuth(); 
   const navigate = useNavigate();
 
-  // Verificăm DOAR la prima încărcare a paginii dacă utilizatorul e deja logat
   useEffect(() => {
     const token = localStorage.getItem('access');
     if (token) {
@@ -43,7 +42,6 @@ const LoginPage = () => {
       // 3. Extragem rolul în siguranță
       const role = finalUser?.role?.toLowerCase();
       
-      // DEBUG: Verifică consola browser-ului tău după ce dai login!
       console.log("Date User:", finalUser);
       console.log("Rol Detectat:", role);
 
@@ -79,8 +77,8 @@ const LoginPage = () => {
     <div className="login-page">
       <Container maxWidth="xs">
         <Paper className="login-paper" elevation={0}>
-          <Typography variant="h4" className="login-title">Burnout App</Typography>
-          <Typography variant="body2" className="login-subtitle">Conectează-te la contul tău</Typography>
+          <Typography variant="h4" className="login-title">Aplicație pentru evaluarea burnoutului</Typography>
+          <Typography variant="body2" className="login-subtitle">Conectează-te în contul tău</Typography>
           
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
@@ -114,12 +112,12 @@ const LoginPage = () => {
               }}
             />
             <Button type="submit" className="login-button" fullWidth variant="contained">
-              Login
+              Conectează-te
             </Button>
           </form>
           
           <Box className="login-footer">
-            Nu ai un cont? <Link to="/register" className="login-link">SIGN UP</Link>
+            Nu ai un cont? <Link to="/register" className="login-link">Înregistrează-te</Link>
           </Box>
         </Paper>
       </Container>

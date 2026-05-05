@@ -39,13 +39,9 @@ class SubmitTestView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-
-        # Functie helper pentru a extrage valori din lista de obiecte [{question_order, value}, ...]
         def get_val(q_num):
-            # Caută cheia "Q9", "Q10" etc. direct în dicționar. Dacă nu există, returnează 3.0
             return float(responses.get(f"Q{q_num}", 3.0))
 
-        # --- Calcule pentru Modelul ML ---
         interest_motivation = (get_val(9) + get_val(12)) / 2
         satisfaction_recognition = (get_val(10) + get_val(13) + get_val(14)) / 3
         procrastination_score = (get_val(16) + get_val(17)) / 2
@@ -117,8 +113,6 @@ class SubmitTestView(generics.CreateAPIView):
         prediction_encoded = xgb_model.predict(X_scaled)
         final_cluster = label_encoder.inverse_transform(prediction_encoded)[0]
 
-        # --- Salvare Rezultat Test ---
-        # AICI am corectat responses=responses_list
         test_result = TestResult.objects.create(
             student=profile,
             responses=responses, 

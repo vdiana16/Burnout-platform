@@ -67,9 +67,9 @@
   background: var(--primary-menta) !important;
   color: #1b4332 !important;
   font-weight: bold !important;
-  text-transform: uppercase !important; /* Păstrăm majusculele aici */
   font-size: 1.1rem !important;
   transition: all 0.3s ease !important;
+  text-transform: none !important;
 }
 
 .login-button:hover {
@@ -88,7 +88,6 @@
   font-weight: bold;
   color: #2d6a4f;
   text-decoration: none;
-  text-transform: uppercase; /* Pentru acel SIGN UP cu majuscule */
 }
 
 .login-link:hover {

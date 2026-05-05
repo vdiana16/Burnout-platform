@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios'; 
 import { Paper, Typography, TextField, Button, Alert, Box, CircularProgress, LinearProgress, Stack, Divider } from '@mui/material';
-import '../../styles/StudentProfile.css'; // Folosim același fișier CSS
+import '../../styles/StudentProfile.css'; 
 
 const PsychologistProfilePage = () => {
     const navigate = useNavigate();

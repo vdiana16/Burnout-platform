@@ -206,7 +206,7 @@ const QuizPage = () => {
           </p>
 
           <button 
-            onClick={() => navigate('/students/me/')} 
+            onClick={() => navigate('/dashboard')} 
             style={{
               backgroundColor: '#2E8B57',
               color: 'white',
@@ -312,24 +312,31 @@ const QuizPage = () => {
                             placeholder="Introduceți valoarea..."
                           />
                         ) : (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
-                            {[1, 2, 3, 4, 5].map((val) => {
-                              const displayLabel = q.is_reverse ? (6 - val) : val;
-                              return (
-                                <button
-                                  key={val} type="button" onClick={() => handleAnswer(q.order, val)}
-                                  style={{
-                                    flex: '1', minWidth: '40px', padding: '15px 10px',
-                                    border: '1px solid', borderColor: answers[q.order] === val ? '#2E8B57' : '#e2e8f0',
-                                    backgroundColor: answers[q.order] === val ? '#e6f4ea' : 'white',
-                                    color: answers[q.order] === val ? '#2E8B57' : '#4a5568',
-                                    borderRadius: '10px', cursor: 'pointer', fontWeight: answers[q.order] === val ? 'bold' : 'normal',
-                                  }}
-                                >
-                                  {displayLabel}
-                                </button>
-                              );
-                            })}
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', padding: '0 5px' }}>
+                              <span style={{ fontSize: '0.85rem', color: '#718096', fontWeight: 'bold' }}>Niciodată</span>
+                              <span style={{ fontSize: '0.85rem', color: '#718096', fontWeight: 'bold' }}>Întotdeauna</span>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                              {[1, 2, 3, 4, 5].map((val) => {
+                                const displayLabel = q.is_reverse ? (6 - val) : val;
+                                return (
+                                  <button
+                                    key={val} type="button" onClick={() => handleAnswer(q.order, val)}
+                                    style={{
+                                      flex: '1', minWidth: '40px', padding: '15px 10px',
+                                      border: '1px solid', borderColor: answers[q.order] === val ? '#2E8B57' : '#e2e8f0',
+                                      backgroundColor: answers[q.order] === val ? '#e6f4ea' : 'white',
+                                      color: answers[q.order] === val ? '#2E8B57' : '#4a5568',
+                                      borderRadius: '10px', cursor: 'pointer', fontWeight: answers[q.order] === val ? 'bold' : 'normal',
+                                    }}
+                                  >
+                                    {displayLabel}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                         {isUnanswered && <p style={{ color: '#e53e3e', fontSize: '0.9rem', marginTop: '15px', marginBottom: '0' }}>⚠️ Răspuns obligatoriu.</p>}
