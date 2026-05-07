@@ -29,27 +29,6 @@ const PsychologistDashboardPage = () => {
     cardBg: '#ffffff'
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('access');
-      // Folosim PATCH sau POST conform viziunii tale din backend
-      const response = await api.patch('/psychologist/me/', formData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.status === 200 || response.status === 201) {
-        alert("Profil salvat cu succes!");
-        
-        // --- ACEASTA ESTE LINIA CARE LIPSEȘTE ---
-        navigate('/dashboard'); 
-      }
-    } catch (err) {
-      console.error("Eroare la salvarea profilului:", err);
-      alert("Nu s-au putut salva datele.");
-    }
-  };
-
   useEffect(() => {
     fetchStudents();
     fetchQuestions(); 
@@ -87,25 +66,6 @@ const PsychologistDashboardPage = () => {
         }
     } catch (err) {
       console.error("Eroare la încărcarea întrebărilor.", err);
-    }
-  };
-
-  const handleSelectStudent = async (student) => {
-    setSelectedStudent(student);
-    setChatMessages([]); 
-    setSelectedTestIndex(0);
-    
-    try {
-      const token = localStorage.getItem('access'); 
-      const response = await api.get(`/tests/?student_id=${student.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.data) {
-        setStudentTests(response.data);
-      }
-    } catch (err) {
-      console.error("Eroare la încărcarea istoricului studentului.", err);
     }
   };
 

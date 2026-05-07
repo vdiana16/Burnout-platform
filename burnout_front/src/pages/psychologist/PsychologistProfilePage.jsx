@@ -63,6 +63,25 @@ const PsychologistProfilePage = () => {
         return (filledCount / fieldsToCheck.length) * 100;
     };
 
+    const handleSelectStudent = async (student) => {
+        setSelectedStudent(student);
+        setChatMessages([]); 
+        setSelectedTestIndex(0);
+        
+        try {
+        const token = localStorage.getItem('access'); 
+        const response = await api.get(`/tests/?student_id=${student.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.data) {
+            setStudentTests(response.data);
+        }
+        } catch (err) {
+        console.error("Eroare la încărcarea istoricului studentului.", err);
+        }
+    };
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setSuccess(''); 
