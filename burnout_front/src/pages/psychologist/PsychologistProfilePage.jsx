@@ -105,7 +105,9 @@ const PsychologistProfilePage = () => {
             });
             
             setSuccess('Profilul a fost actualizat cu succes!');
-            setTimeout(() => setSuccess(''), 3000);
+            setTimeout(() => {
+                    navigate('/dashboard'); 
+            }, 1000); 
         } catch (err) {
             console.error("Eroare la salvare:", err);
             setError('A apărut o eroare la salvarea datelor.');

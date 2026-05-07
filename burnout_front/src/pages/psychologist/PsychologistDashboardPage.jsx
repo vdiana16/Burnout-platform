@@ -75,7 +75,7 @@ const PsychologistDashboardPage = () => {
           const token = localStorage.getItem('access');
           
           // 1. Verificăm profilul psihologului
-          const profileRes = await api.get('/psychologist/me/', {
+          const profileRes = await api.get('/psychologists/me/', {
             headers: { 'Authorization': `Bearer ${token}` }
           });
 
