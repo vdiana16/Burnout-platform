@@ -37,15 +37,17 @@ const StudentDashboardPage = () => {
   useEffect(() => {
       if (!user?.id) return;
       const url = `ws://127.0.0.1:8000/ws/chat/${user.id}/`;
-      socketRef.current = new WebSocket(url);
+      
+      // 1. Definim socket-ul într-o variabilă LOCALĂ
+      const socket = new WebSocket(url);
+      socketRef.current = socket;
 
-      socketRef.current.onmessage = (e) => {
-      const data = JSON.parse(e.data);
+      socket.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        shouldScrollRef.current = true;
 
-      shouldScrollRef.current = true;
-
-      setMessages((prev) => {
-          // FILTRU ANTIDUPLICARE: Dacă ultimul mesaj e identic cu cel nou, ignoră-l
+        setMessages((prev) => {
+          // FILTRU ANTIDUPLICARE: Ignoră mesajul dacă e identic cu ultimul
           const lastMsg = prev[prev.length - 1];
           if (lastMsg && lastMsg.sender_id === data.sender_id && lastMsg.message === data.message) {
               return prev; 
@@ -58,13 +60,12 @@ const StudentDashboardPage = () => {
         });
       };
 
-      // ✅ ACEASTA ESTE LINIA LIPSĂ: Curățarea conexiunii când ieși de pe pagină
+      // 2. CURĂȚAREA: Închidem fix conexiunea locală când ieșim din pagină
       return () => {
-          if (socketRef.current) socketRef.current.close();
-    };
+          socket.close(); 
+      };
   }, [user?.id]);
-
-
+  
   const sendMessage = () => {
       if (newMessage.trim() === "" || !socketRef.current) return;
 
