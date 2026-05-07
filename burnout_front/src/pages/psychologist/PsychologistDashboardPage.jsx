@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext'; 
 import api from '../../api/axios'; 
 import { 
@@ -7,14 +8,13 @@ import {
 
 const PsychologistDashboardPage = () => {
   const { user } = useAuth(); 
-
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentTests, setStudentTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTestIndex, setSelectedTestIndex] = useState(0);
   const [questionsMap, setQuestionsMap] = useState({});
-
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const wsRef = useRef(null);
@@ -27,6 +27,27 @@ const PsychologistDashboardPage = () => {
     success: '#38a169',
     text: '#2d3748',
     cardBg: '#ffffff'
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('access');
+      // Folosim PATCH sau POST conform viziunii tale din backend
+      const response = await api.patch('/psychologist/me/', formData, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        alert("Profil salvat cu succes!");
+        
+        // --- ACEASTA ESTE LINIA CARE LIPSEȘTE ---
+        navigate('/dashboard'); 
+      }
+    } catch (err) {
+      console.error("Eroare la salvarea profilului:", err);
+      alert("Nu s-au putut salva datele.");
+    }
   };
 
   useEffect(() => {
@@ -87,6 +108,35 @@ const PsychologistDashboardPage = () => {
       console.error("Eroare la încărcarea istoricului studentului.", err);
     }
   };
+
+  useEffect(() => {
+      const checkProfileAndData = async () => {
+        try {
+          const token = localStorage.getItem('access');
+          
+          // 1. Verificăm profilul psihologului
+          const profileRes = await api.get('/psychologist/me/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          // Dacă nu are specializare sau bio, îl trimitem să le completeze
+          if (!profileRes.data.specialization || !profileRes.data.bio) {
+            navigate('/psychologist-profile');
+            return;
+          }
+
+          // 2. Dacă profilul e OK, încărcăm datele
+          fetchStudents();
+          fetchQuestions();
+        } catch (err) {
+          console.error("Eroare la verificarea profilului:", err);
+          navigate('/psychologist-profile');
+        }
+      };
+
+      checkProfileAndData();
+    }, []);
+
 
   useEffect(() => {
     if (!selectedStudent || !user?.id) return;

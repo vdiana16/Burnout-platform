@@ -62,7 +62,10 @@ class StudentProfileSerializer(serializers.ModelSerializer):
                     "id": psych_profile.user.id,
                     "first_name": psych_profile.user.first_name,
                     "last_name": psych_profile.user.last_name,
-                    "email": psych_profile.user.email
+                    "email": psych_profile.user.email,
+                    "specialization": psych_profile.specialization,
+                    "office_location": psych_profile.office_location, 
+                    "phone_number": psych_profile.phone_number
                 }
         return None
 

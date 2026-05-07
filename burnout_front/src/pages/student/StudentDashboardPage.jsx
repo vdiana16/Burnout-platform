@@ -10,16 +10,16 @@ import {
 const StudentDashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [psychologistId, setPsychologistId] = useState(null);
-
+  const [assignedPsychologist, setAssignedPsychologist] = useState(null); 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const shouldScrollRef = useRef(false);
 
   const colors = {
     primary: '#2E8B57',    
@@ -40,20 +40,17 @@ const StudentDashboardPage = () => {
       socketRef.current = new WebSocket(url);
 
       socketRef.current.onmessage = (e) => {
-          const data = JSON.parse(e.data);
-          setMessages((prev) => [...prev, {
-              sender_id: data.sender_id,
-              message: data.message,
-              timestamp: new Date().toLocaleTimeString()
-          }]);
-      };
+      const data = JSON.parse(e.data);
 
-      socketRef.current.onclose = () => console.log("Chat deconectat");
+      shouldScrollRef.current = true;
 
-      return () => {
-          if (socketRef.current) socketRef.current.close();
-      };
+      setMessages((prev) => [...prev, {
+        sender_id: data.sender_id,
+        message: data.message
+      }]);
+    };
   }, [user?.id]);
+
 
   const sendMessage = () => {
       if (newMessage.trim() === "" || !socketRef.current) return;
@@ -69,8 +66,12 @@ const StudentDashboardPage = () => {
   };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+      if (shouldScrollRef.current) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      
+        // După ce a făcut scroll, îl oprim la loc pentru a nu sări pagina aiurea mai târziu
+        shouldScrollRef.current = false; 
+    }  }, [messages]);
 
   // 2. PRELUAREA DATELOR ȘI VERIFICAREA PROFILULUI (Logica unificată)
   useEffect(() => {
@@ -107,7 +108,8 @@ const StudentDashboardPage = () => {
             setIsProfileComplete(true);
             if (data.assigned_psychologist && data.assigned_psychologist.id) {
                 setPsychologistId(data.assigned_psychologist.id);
-            }
+                setAssignedPsychologist(data.assigned_psychologist);
+            } 
             
         } catch (err) {
             console.error("Eroare verificare profil.", err);
@@ -242,6 +244,68 @@ const StudentDashboardPage = () => {
           </button>
         </div>
         <div style={{ fontSize: '7rem', opacity: 0.15 }}>🌿</div>
+        {assignedPsychologist && (
+          <div style={{
+            backgroundColor: 'white',
+            padding: '24px',
+            borderRadius: '20px',
+            marginBottom: '10px',
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '20px',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.03)'
+          }}>
+            {/* Avatar Psiholog */}
+            <div style={{ 
+              fontSize: '2.5rem', 
+              backgroundColor: '#f0fdf4', 
+              width: '70px', 
+              height: '70px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              borderRadius: '50%',
+              border: '2px solid #c6f6d5',
+              flexShrink: 0
+            }}>
+              👨‍⚕️
+            </div>
+            
+            {/* Informații Psiholog */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <h4 style={{ margin: 0, color: '#2d3748', fontSize: '1.2rem', fontWeight: '800' }}>
+                {assignedPsychologist.first_name} {assignedPsychologist.last_name}
+              </h4>
+              
+              {/* Rândul 1: Specializare & Locație */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', color: '#4a5568', fontSize: '0.95rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ color: '#a0aec0', fontSize: '1.1rem' }}>🔖</span>
+                  <span style={{ color: '#718096' }}>Specializare:</span>
+                  <span style={{ fontWeight: '600' }}>{assignedPsychologist.specialization || 'Nespecificată'}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ color: '#a0aec0', fontSize: '1.1rem' }}>📍</span>
+                  <span style={{ color: '#718096' }}>Locație:</span>
+                  <span style={{ fontWeight: '600' }}>{assignedPsychologist.office_location || assignedPsychologist.institution_name || 'Cabinet Online'}</span>
+                </div>
+              </div>
+              
+              {/* Rândul 2: Contact */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', color: '#4a5568', fontSize: '0.95rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: '#f7fafc', padding: '4px 10px', borderRadius: '8px' }}>
+                  <span>📧</span>
+                  <span style={{ fontWeight: '600', color: '#2b6cb0' }}>{assignedPsychologist.email}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: '#f7fafc', padding: '4px 10px', borderRadius: '8px' }}>
+                  <span>📞</span>
+                  <span style={{ fontWeight: '600', color: '#2b6cb0' }}>{assignedPsychologist.phone_number || 'Nespecificat'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 2. STATUS CURENT */}
