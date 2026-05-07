@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 class Question(models.Model):
     text = models.CharField(max_length=500)
@@ -19,8 +20,8 @@ class Question(models.Model):
 
 class TestResult(models.Model):
     student = models.ForeignKey('StudentProfile', on_delete=models.CASCADE, related_name='test_results')
-    taken_at = models.DateTimeField(auto_now_add=True)
-    
+    taken_at = models.DateTimeField(default=timezone.now)
+
     responses = models.JSONField(default=dict, help_text="Răspunsurile brute la formular")
     predicted_cluster = models.CharField(max_length=50, null=True, blank=True, help_text="Clusterul prezis de XGBoost")
     

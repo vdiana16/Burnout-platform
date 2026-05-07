@@ -69,6 +69,25 @@ const PsychologistDashboardPage = () => {
     }
   };
 
+  const handleSelectStudent = async (student) => {
+    setSelectedStudent(student);
+    setChatMessages([]); 
+    setSelectedTestIndex(0);
+    
+    try {
+      const token = localStorage.getItem('access'); 
+      const response = await api.get(`/tests/?student_id=${student.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.data) {
+        setStudentTests(response.data);
+      }
+    } catch (err) {
+      console.error("Eroare la încărcarea istoricului studentului.", err);
+    }
+  };
+
   useEffect(() => {
       const checkProfileAndData = async () => {
         try {
@@ -126,10 +145,18 @@ const PsychologistDashboardPage = () => {
 
     wsRef.current.onmessage = (e) => {
       const data = JSON.parse(e.data);
-      setChatMessages((prev) => [...prev, {
-        sender_id: data.sender_id,
-        message: data.message
-      }]);
+      
+      setChatMessages((prev) => {
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg && lastMsg.sender_id === data.sender_id && lastMsg.message === data.message) {
+            return prev; 
+        }
+        
+        return [...prev, {
+          sender_id: data.sender_id,
+          message: data.message
+        }];
+      });
     };
 
     return () => {

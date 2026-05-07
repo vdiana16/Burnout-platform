@@ -145,19 +145,24 @@ const QuizPage = () => {
   const getClusterInfo = (clusterName) => {
     const name = clusterName.toLowerCase();
     
-    // Personalizează aceste cuvinte cheie în funcție de cum se numesc clusterele tale din Python
-    if (name.includes('ridicat') || name.includes('sever') || name.includes('epuizare')) {
-      return { color: '#e53e3e', bg: '#fff5f5', icon: '🚨', message: 'Nivelul tău de stres pare să fie destul de ridicat. Îți recomandăm să iei o pauză și să consulți sfaturile din dashboard.' };
-    }
-    if (name.includes('moderat') || name.includes('mediu') || name.includes('risc')) {
-      return { color: '#dd6b20', bg: '#fffaf0', icon: '⚠️', message: 'Ești pe o pantă ascendentă a stresului. Încearcă să îți reglezi programul de somn și de studiu.' };
-    }
-    if (name.includes('scăzut') || name.includes('fără') || name.includes('optim') || name.includes('echilibrat')) {
-      return { color: '#38a169', bg: '#f0fff4', icon: '🌿', message: 'Felicitări! Gestionezi bine stresul și ai un echilibru sănătos între facultate și viața personală.' };
+    if (name.includes('ridicat') || name.includes('sever')) {
+      return { 
+        color: '#e53e3e', bg: '#fff5f5', icon: '🚨', 
+        message: 'Pare că traversezi o perioadă dificilă. Datele au fost transmise specialistului tău. Te rugăm să urmărești secțiunea de Chat pentru recomandări personalizate.' 
+      };
     }
     
-    // Design default dacă numele clusterului nu se potrivește cu cele de sus
-    return { color: '#3182ce', bg: '#ebf8ff', icon: '📊', message: 'Acesta este profilul tău actual. Verifică sfaturile personalizate pregătite pentru tine.' };
+    if (name.includes('moderat') || name.includes('mediu')) {
+      return { 
+        color: '#dd6b20', bg: '#fffaf0', icon: '⚠️', 
+        message: 'Ești într-o zonă de alertă. Încearcă să reduci presiunea academică și nu ezita să îi scrii psihologului tău pentru sfaturi.' 
+      };
+    }
+    
+    return { 
+      color: '#38a169', bg: '#f0fff4', icon: '🔋', 
+      message: 'Ești într-o zonă sigură. Dacă simți nevoia să discuți totuși cu cineva, psihologul tău este la un mesaj distanță.' 
+    };
   };
 
   const totalQuestions = questions.length;

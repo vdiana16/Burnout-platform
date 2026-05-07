@@ -44,10 +44,23 @@ const StudentDashboardPage = () => {
 
       shouldScrollRef.current = true;
 
-      setMessages((prev) => [...prev, {
-        sender_id: data.sender_id,
-        message: data.message
-      }]);
+      setMessages((prev) => {
+          // FILTRU ANTIDUPLICARE: Dacă ultimul mesaj e identic cu cel nou, ignoră-l
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg && lastMsg.sender_id === data.sender_id && lastMsg.message === data.message) {
+              return prev; 
+          }
+          
+          return [...prev, {
+            sender_id: data.sender_id,
+            message: data.message
+          }];
+        });
+      };
+
+      // ✅ ACEASTA ESTE LINIA LIPSĂ: Curățarea conexiunii când ieși de pe pagină
+      return () => {
+          if (socketRef.current) socketRef.current.close();
     };
   }, [user?.id]);
 
@@ -352,15 +365,27 @@ const StudentDashboardPage = () => {
             </div>
 
             <div style={{ backgroundColor: '#faf5ff', padding: '30px', borderRadius: '24px', border: '1px solid #e9d8fd', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <h4 style={{ margin: '0 0 15px 0', fontSize: '1.2rem', color: '#6b46c1' }}>Atenție la:</h4>
-              <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🎯</div>
-              <p style={{ fontSize: '1.1rem', margin: '0 0 10px 0', color: '#4a5568' }}>
-                Pe baza ultimului tău test, se pare că <strong>{topFactor?.factor}</strong> a fost cel mai mare factor de presiune (Scor: {topFactor?.scor.toFixed(1)} / 5).
-              </p>
-              <p style={{ fontSize: '0.95rem', color: '#718096', margin: 0, lineHeight: '1.5' }}>
-                Graficul radar de alături îți arată zonele tale sensibile. Cu cât forma mov este mai întinsă spre exterior, cu atât nivelul de stres în acea arie este mai ridicat.
-              </p>
+  
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '1rem', color: '#6b46c1', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Zona de focus:
+            </h4>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+              <div style={{ fontSize: '2.5rem' }}>🎯</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#44337a' }}>
+                {topFactor?.factor}
+              </div>
             </div>
+
+            <p style={{ fontSize: '1.05rem', margin: '0 0 15px 0', color: '#4a5568', lineHeight: '1.5' }}>
+              Conform celei mai recente evaluări, aceasta pare să fie aria care îți consumă cea mai multă energie în acest moment.
+            </p> 
+            
+            <p style={{ fontSize: '0.9rem', color: '#718096', margin: 0, lineHeight: '1.5' }}>
+              Graficul radar de alături îți arată zonele tale sensibile. Cu cât forma mov este mai întinsă spre exterior, cu atât nivelul de stres în acea arie este mai ridicat.
+            </p>
+
+          </div>
 
           </div>
         </div>
