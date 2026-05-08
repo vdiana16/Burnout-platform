@@ -17,9 +17,11 @@ const StudentDashboardPage = () => {
   const [assignedPsychologist, setAssignedPsychologist] = useState(null); 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [notification, setNotification] = useState(null);
   const socketRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const shouldScrollRef = useRef(false);
+  const messagesEndRef = useRef(null)
 
   const colors = {
     primary: '#2E8B57',    
@@ -58,6 +60,13 @@ const StudentDashboardPage = () => {
             message: data.message
           }];
         });
+
+        if (data.sender_id !== user?.id) {
+          setNotification('Ai un mesaj nou de la psiholog!');
+          setTimeout(() => {
+            setNotification(null);
+          }, 4000);
+        }
       };
 
       // 2. CURĂȚAREA: Închidem fix conexiunea locală când ieșim din pagină
@@ -65,6 +74,12 @@ const StudentDashboardPage = () => {
           socket.close(); 
       };
   }, [user?.id]);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
   
   const sendMessage = () => {
       if (newMessage.trim() === "" || !socketRef.current) return;
@@ -78,14 +93,6 @@ const StudentDashboardPage = () => {
       socketRef.current.send(JSON.stringify(messageData));
       setNewMessage('');
   };
-
-  useEffect(() => {
-      if (shouldScrollRef.current) {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      
-        // După ce a făcut scroll, îl oprim la loc pentru a nu sări pagina aiurea mai târziu
-        shouldScrollRef.current = false; 
-    }  }, [messages]);
 
   // 2. PRELUAREA DATELOR ȘI VERIFICAREA PROFILULUI (Logica unificată)
   useEffect(() => {
@@ -227,7 +234,15 @@ const StudentDashboardPage = () => {
 
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1000px', margin: '0 auto', color: colors.text }}>
-      
+      {notification && 
+        <div style={{ position:'fixed', top:'20px', left:'50%', transform:'translateX(-50%)', zIndex:10000, backgroundColor:colors.primary, color:'white', padding:'12px 25px', borderRadius:'50px', boxShadow:'0 8px 20px rgba(0,0,0,0.15)', display:'flex', alignItems:'center', gap:'12px', fontWeight:'bold', fontSize:'1rem', border:'2px solid rgba(255,255,255,0.2)', animation:'fadeInDown 0.3s ease', whiteSpace:'nowrap' }}>
+          <span style={{ fontSize:'1.2rem' }}>
+            📩
+          </span>
+          <span>{notification}</span>
+        </div>
+      }
+
       {/* 1. HERO BANNER */}
       <div style={{ 
         background: `linear-gradient(135deg, ${colors.primary} 0%, #1b4332 100%)`,
@@ -289,7 +304,7 @@ const StudentDashboardPage = () => {
             {/* Informații Psiholog */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <h4 style={{ margin: 0, color: '#2d3748', fontSize: '1.2rem', fontWeight: '800' }}>
-                {assignedPsychologist.first_name} {assignedPsychologist.last_name}
+                Dr. {assignedPsychologist.first_name} {assignedPsychologist.last_name}
               </h4>
               
               {/* Rândul 1: Specializare & Locație */}
@@ -436,11 +451,13 @@ const StudentDashboardPage = () => {
           </div>
         ) : (
           <>
-            <div style={{ 
-              height: '350px', overflowY: 'auto', border: '1px solid #edf2f7', 
-              borderRadius: '16px', padding: '20px', marginBottom: '20px', 
-              backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '10px' 
-            }}>
+            <div 
+              ref={chatContainerRef}
+              style={{ 
+                height: '350px', overflowY: 'auto', border: '1px solid #edf2f7', 
+                borderRadius: '16px', padding: '20px', marginBottom: '20px', 
+                backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '10px' 
+              }}>
               {messages.length === 0 ? (
                 <div style={{ textAlign: 'center', color: '#a0aec0', margin: 'auto' }}>
                   Începe o conversație cu psihologul tău pentru suport personalizat.

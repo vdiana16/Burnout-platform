@@ -17,8 +17,11 @@ const PsychologistDashboardPage = () => {
   const [questionsMap, setQuestionsMap] = useState({});
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
+  const [notification, setNotification] = useState(null);
+  
   const wsRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   const colors = {
     primary: '#2E8B57',
@@ -29,17 +32,17 @@ const PsychologistDashboardPage = () => {
     cardBg: '#ffffff'
   };
 
-  useEffect(() => {
-    fetchStudents();
-    fetchQuestions(); 
-  }, []);
-
+  // ==========================================
+  // 1. FUNCȚII DE PRELUARE DATE (FETCH)
+  // ==========================================
   const fetchStudents = async () => {
     try {
       const token = localStorage.getItem('access');
-      const response = await api.get('/psychologist/students/', {
+      // Anti-cache pentru a forța preluarea studenților noi instant
+      const response = await api.get(`/psychologist/students/?t=${new Date().getTime()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
       if (response.data) {
         setStudents(response.data);
       }
@@ -88,38 +91,50 @@ const PsychologistDashboardPage = () => {
     }
   };
 
+  // ==========================================
+  // 2. EFECTE (INITIALIZARE ȘI POLLING)
+  // ==========================================
+  
+  // A. Verificare profil și prima încărcare a datelor
   useEffect(() => {
-      const checkProfileAndData = async () => {
-        try {
-          const token = localStorage.getItem('access');
-          
-          // 1. Verificăm profilul psihologului
-          const profileRes = await api.get('/psychologists/me/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
+    const checkProfileAndData = async () => {
+      try {
+        const token = localStorage.getItem('access');
+        const profileRes = await api.get('/psychologists/me/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-          // Dacă nu are specializare sau bio, îl trimitem să le completeze
-          if (!profileRes.data.specialization || !profileRes.data.bio) {
-            navigate('/psychologist-profile');
-            return;
-          }
-
-          // 2. Dacă profilul e OK, încărcăm datele
-          fetchStudents();
-          fetchQuestions();
-        } catch (err) {
-          console.error("Eroare la verificarea profilului:", err);
+        if (!profileRes.data.specialization || !profileRes.data.bio) {
           navigate('/psychologist-profile');
+          return;
         }
-      };
 
-      checkProfileAndData();
-    }, []);
+        // Încărcăm datele inițiale
+        fetchStudents();
+        fetchQuestions();
+      } catch (err) {
+        console.error("Eroare la verificarea profilului:", err);
+        navigate('/psychologist-profile');
+      }
+    };
 
+    checkProfileAndData();
+  }, [navigate]);
 
+  // B. Polling: Actualizare listă studenți o dată la 5 secunde
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchStudents();
+    }, 5000); 
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // C. Gestionare conexiune WebSocket pentru Chat Live
   useEffect(() => {
     if (!selectedStudent || !user?.id) return;
 
+    // Aducem istoricul mesajelor
     const fetchHistory = async () => {
       try {
         const token = localStorage.getItem('access');
@@ -140,34 +155,48 @@ const PsychologistDashboardPage = () => {
     
     fetchHistory();
 
+    // Deschidem conexiunea WebSocker cu variabila locală sigură
     const url = `ws://127.0.0.1:8000/ws/chat/${selectedStudent.user_id}/`;
-    wsRef.current = new WebSocket(url);
+    const socket = new WebSocket(url);
+    wsRef.current = socket; 
 
-    wsRef.current.onmessage = (e) => {
+    socket.onmessage = (e) => {
       const data = JSON.parse(e.data);
       
       setChatMessages((prev) => {
         const lastMsg = prev[prev.length - 1];
+        // Filtru antiduplicare
         if (lastMsg && lastMsg.sender_id === data.sender_id && lastMsg.message === data.message) {
             return prev; 
         }
-        
         return [...prev, {
           sender_id: data.sender_id,
           message: data.message
         }];
       });
+      
+      if (data.sender_id !== user?.id) {
+        setNotification(`Mesaj nou de la ${selectedStudent?.first_name || 'student'}!`);
+        setTimeout(() => setNotification(null), 4000);
+      }
+  
     };
 
     return () => {
-      if (wsRef.current) wsRef.current.close();
+      socket.close(); 
     };
   }, [selectedStudent, user?.id]);
 
+  // D. Autoscroll pentru chat
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [chatMessages]);
 
+  // ==========================================
+  // 3. HANDLERS ȘI HELPERS PENTRU UI
+  // ==========================================
   const handleSendMessage = () => {
     if (currentMessage.trim() === "" || !selectedStudent || !wsRef.current || !user?.id) return;
 
@@ -195,13 +224,6 @@ const PsychologistDashboardPage = () => {
     });
   };
 
-  if (loading) return <div style={{ padding: '40px', textAlign: 'center', fontSize: '1.2rem', color: '#718096' }}>Se încarcă baza de date a instituției...</div>;
-
-  const highRiskCount = students.filter(s => {
-    const diag = s.last_diagnostic ? s.last_diagnostic.toLowerCase() : '';
-    return diag.includes('ridicat');
-  }).length;
-
   const getOverallStatus = () => {
     if (students.length === 0) return "Fără Date";
     
@@ -220,9 +242,25 @@ const PsychologistDashboardPage = () => {
     return "Stare Bună";
   };
 
+  if (loading) return <div style={{ padding: '40px', textAlign: 'center', fontSize: '1.2rem', color: '#718096' }}>Se încarcă baza de date a instituției...</div>;
+
+  const highRiskCount = students.filter(s => {
+    const diag = s.last_diagnostic ? s.last_diagnostic.toLowerCase() : '';
+    return diag.includes('ridicat');
+  }).length;
+
   return (
     <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'inherit', color: colors.text }}>
       
+      {notification && 
+        <div style={{ position:'fixed', top:'20px', left:'50%', transform:'translateX(-50%)', zIndex:10000, backgroundColor:colors.primary, color:'white', padding:'12px 25px', borderRadius:'50px', boxShadow:'0 8px 20px rgba(0,0,0,0.15)', display:'flex', alignItems:'center', gap:'12px', fontWeight:'bold', fontSize:'1rem', border:'2px solid rgba(255,255,255,0.2)', animation:'fadeInDown 0.3s ease', whiteSpace:'nowrap' }}>
+          <span style={{ fontSize:'1.2rem' }}>
+            📩
+          </span>
+          <span>{notification}</span>
+        </div>
+      }
+
       {/* HEADER DASHBOARD */}
       <div style={{ marginBottom: '30px' }}>
         <h1 style={{ margin: 0, fontWeight: '800', fontSize: '2.2rem' }}>Portal Management Studenți 🎓</h1>
@@ -304,24 +342,22 @@ const PsychologistDashboardPage = () => {
               
               {/* HEADER PROFIL STUDENT */}
              <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
-                {/* Am adăugat flexWrap și gap aici pentru ecrane mai mici */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                   <div>
                     <h2 style={{ margin: '0 0 8px 0', fontSize: '1.8rem', fontWeight: '800' }}>{selectedStudent.first_name} {selectedStudent.last_name}</h2>
                     <p style={{ color: '#718096', margin: 0, fontSize: '1rem' }}>📧 {selectedStudent.email} • 📚 {selectedStudent.education_level}</p>
                   </div>
                   
-                  {/* Am transformat acest container într-un flexbox tip coloană */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                     <p style={{ fontSize: '0.85rem', color: '#a0aec0', margin: 0, textTransform: 'uppercase' }}>Status Curent</p>
                     <span style={{ 
-                      display: 'inline-block', /* Aceasta previne suprapunerea pe verticală */
-                      whiteSpace: 'nowrap', /* Previne ruperea textului pe 2 rânduri */
+                      display: 'inline-block',
+                      whiteSpace: 'nowrap', 
                       padding: '8px 20px', borderRadius: '30px', fontWeight: '800', fontSize: '0.95rem',
-                      backgroundColor: studentTests[0]?.predicted_cluster?.toLowerCase().includes('ridicat') ? '#fff5f5' : 
-                                      studentTests[0]?.predicted_cluster?.toLowerCase().includes('moderat') ? '#fffaf0' : '#f0fdf4',
-                      color: studentTests[0]?.predicted_cluster?.toLowerCase().includes('ridicat') ? colors.danger : 
-                            studentTests[0]?.predicted_cluster?.toLowerCase().includes('moderat') ? colors.warning : colors.success,
+                      backgroundColor: (studentTests[0]?.predicted_cluster || '').toLowerCase().includes('ridicat') ? '#fff5f5' : 
+                                       (studentTests[0]?.predicted_cluster || '').toLowerCase().includes('moderat') ? '#fffaf0' : '#f0fdf4',
+                      color: (studentTests[0]?.predicted_cluster || '').toLowerCase().includes('ridicat') ? colors.danger : 
+                             (studentTests[0]?.predicted_cluster || '').toLowerCase().includes('moderat') ? colors.warning : colors.success,
                     }}>
                       {studentTests[0]?.predicted_cluster || 'FĂRĂ EVALUĂRI'}
                     </span>
@@ -334,7 +370,7 @@ const PsychologistDashboardPage = () => {
                 <h3 style={{ marginTop: 0, marginBottom: '25px', color: '#2d3748', fontSize: '1.2rem', fontWeight: '700' }}>Evoluția Diagnosticelor</h3>
                 {studentTests.length > 1 ? (
                   <ResponsiveContainer width="100%" height={280}>
-                    <LineChart data={getLineData()} margin={{ top: 10, right: 30, bottom: 10, left: -20 }}>
+                    <LineChart data={getLineData()} margin={{ top: 10, right: 30, bottom: 10, left: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f4f8" />
                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#a0aec0' }} dy={10} />
                       <YAxis domain={[0.5, 3.5]} ticks={[1, 2, 3]} axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#a0aec0' }} tickFormatter={v => v === 3 ? 'RIDICAT' : v === 2 ? 'MODERAT' : 'SCĂZUT'} />
@@ -349,11 +385,10 @@ const PsychologistDashboardPage = () => {
                 )}
               </div>
 
-              {/* RĂSPUNSURILE LA EVALUĂRI (CU ISTORIC) */}
+              {/* RĂSPUNSURILE LA EVALUĂRI */}
               {studentTests.length > 0 && (
                 <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
                   
-                  {/* Header-ul secțiunii cu Dropdown-ul de selecție a datei */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
                     <h3 style={{ margin: 0, color: '#2d3748', fontSize: '1.2rem', fontWeight: '700' }}>
                       Răspunsuri la chestionar
@@ -377,11 +412,9 @@ const PsychologistDashboardPage = () => {
                     </select>
                   </div>
 
-                  {/* Lista cu Răspunsurile efective */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {studentTests[selectedTestIndex] && studentTests[selectedTestIndex].responses ? (
                       [
-                        // 1. Adăugăm manual cele 6 variabile din profilul studentului selectat
                         { label: "Vârstă Student", value: selectedStudent?.age },
                         { label: "Medie Academică (GPA)", value: selectedStudent?.academic_gpa },
                         { label: "Nivel Educație", value: selectedStudent?.education_level },
@@ -389,7 +422,6 @@ const PsychologistDashboardPage = () => {
                         { label: "Domeniu de Studiu", value: selectedStudent?.field },
                         { label: "Statut Angajare", value: selectedStudent?.employment },
                         
-                        // 2. Extragem restul variabilelor din test (Q1, Q2, etc.) și le adăugăm în aceeași listă
                         ...Object.entries(studentTests[selectedTestIndex].responses).map(([key, val]) => ({
                           label: questionsMap[key]?.text || `Întrebarea ${key.replace('Q', '')}`,
                           value: val
@@ -399,18 +431,16 @@ const PsychologistDashboardPage = () => {
                           display: 'flex', 
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          backgroundColor: idx < 6 ? '#edf2f7' : '#f8fafc', // Primele 6 variabile vor avea un fundal gri ușor diferit pentru a le separa vizual
+                          backgroundColor: idx < 6 ? '#edf2f7' : '#f8fafc',
                           padding: '12px 20px', 
                           borderRadius: '12px', 
                           border: '1px solid #edf2f7',
                           marginBottom: '4px'
                         }}>
-                          {/* Numele variabilei sau textul întrebării */}
                           <div style={{ fontSize: '0.95rem', color: '#4a5568', flex: 1, paddingRight: '15px', fontWeight: idx < 6 ? '700' : '500' }}>
                             {item.label}
                           </div>
                           
-                          {/* Valoarea variabilei */}
                           <div style={{ 
                             fontSize: '1.1rem', 
                             color: '#2d3748',
@@ -440,10 +470,12 @@ const PsychologistDashboardPage = () => {
                   <div style={{ fontSize: '1.5rem' }}>💬</div>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#2d3748', fontWeight: '800' }}>Chat Live cu {selectedStudent.first_name}</h3>
                 </div>
-                
-                {/* Fereastra mesaje */}
-                <div style={{ height: '300px', overflowY: 'auto', border: '1px solid #edf2f7', borderRadius: '16px', padding: '20px', marginBottom: '20px', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {chatMessages.length === 0 ? (
+                                
+                <div 
+                  ref={chatContainerRef} 
+                  style={{ height: '300px', overflowY: 'auto', border: '1px solid #edf2f7', borderRadius: '16px', padding: '20px', marginBottom: '20px', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '10px' }}
+                >
+                    {chatMessages.length === 0 ? (
                     <div style={{ textAlign: 'center', color: '#a0aec0', margin: 'auto' }}>
                       Niciun mesaj anterior. Începe conversația!
                     </div>
@@ -464,7 +496,6 @@ const PsychologistDashboardPage = () => {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input mesaje */}
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <input 
                     type="text" 
