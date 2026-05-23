@@ -18,6 +18,14 @@ const StudentDashboardPage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [notification, setNotification] = useState(null);
+  const [questions, setQuestions] = useState([]); 
+  const [expandedTests, setExpandedTests] = useState({}); 
+  const toggleTestResponses = (testId) => {
+      setExpandedTests(prev => ({
+          ...prev,
+          [testId]: !prev[testId]
+      }));
+  };  
   const socketRef = useRef(null);
   const chatContainerRef = useRef(null);
   const shouldScrollRef = useRef(false);
@@ -155,9 +163,22 @@ const StudentDashboardPage = () => {
         }
     };
 
+    const fetchQuestions = async () => {
+        try {
+            const token = localStorage.getItem('access');
+            const response = await api.get('/questions/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setQuestions(response.data);
+        } catch (err) {
+            console.error("Eroare la încărcarea întrebărilor.", err);
+        }
+    };
+
     checkProfile();
     fetchResults();
     fetchMessagesHistory();
+    fetchQuestions();
   }, [navigate]);
 
   const handleStartQuiz = () => {
@@ -403,6 +424,79 @@ const StudentDashboardPage = () => {
 
           </div>
 
+          </div>
+        </div>
+      )}
+
+      {results.length > 0 && questions.length > 0 && (
+        <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8', marginBottom: '40px' }}>
+          <h2 style={{ fontSize: '1.4rem', margin: '0 0 20px 0', fontWeight: '800' }}>Istoricul Evaluărilor și Răspunsurile Tale</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {results.map((result, index) => {
+              // Verificăm dacă testul curent a fost "apăsat" pentru a-i vedea răspunsurile
+              const isExpanded = expandedTests[result.id];
+              
+              // Formatăm data testului
+              const dateObj = new Date(result.taken_at);
+              const formattedDate = `${dateObj.toLocaleDateString('ro-RO', { day: '2-digit', month: 'long', year: 'numeric' })} - ${dateObj.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}`;
+              
+              return (
+                <div key={result.id} style={{ border: '1px solid #edf2f7', borderRadius: '16px', padding: '20px', backgroundColor: isExpanded ? '#ffffff' : '#f8fafc', transition: 'all 0.3s ease' }}>
+                  
+                  {/* HEADER-UL TESTULUI (Data, Rezultat și Buton) */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: '#4a5568', fontSize: '1.1rem' }}>
+                        Evaluarea {results.length - index} 
+                        <span style={{ fontWeight: 'normal', fontSize: '0.9rem', color: '#a0aec0', marginLeft: '10px' }}>({formattedDate})</span>
+                      </div>
+                      <div style={{ marginTop: '5px', fontSize: '0.95rem' }}>
+                        Rezultat evaluare: <span style={{ 
+                          fontWeight: 'bold', 
+                          color: result.predicted_cluster.toLowerCase().includes('ridicat') || result.predicted_cluster.toLowerCase().includes('epuizare') 
+                            ? colors.danger 
+                            : result.predicted_cluster.toLowerCase().includes('moderat') 
+                              ? colors.warning 
+                              : colors.success 
+                        }}>
+                          {result.predicted_cluster}
+                        </span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => toggleTestResponses(result.id)}
+                      style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #e2e8f0', backgroundColor: isExpanded ? '#f1f5f9' : 'white', cursor: 'pointer', fontWeight: 'bold', color: colors.text, transition: '0.2s' }}
+                    >
+                      {isExpanded ? 'Ascunde' : 'Vezi Răspunsurile'}
+                    </button>
+                  </div>
+
+                  {/* LISTA DE RĂSPUNSURI (vizibilă doar dacă isExpanded e true) */}
+                  {isExpanded && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #edf2f7' }}>
+                      {Object.entries(result.responses).map(([key, value]) => {
+                        const qOrder = parseInt(key.replace('Q', ''));
+                        const questionObj = questions.find(q => q.order === qOrder);
+                        const questionText = questionObj ? questionObj.text : `Întrebarea ${qOrder}`;
+
+                        return (
+                          <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '10px' }}>
+                            <span style={{ fontWeight: '500', color: '#4a5568', flex: 1, paddingRight: '15px', fontSize: '0.95rem' }}>
+                              {questionText}
+                            </span>
+                            <span style={{ fontWeight: '900', color: colors.primary, minWidth: '40px', textAlign: 'center', backgroundColor: '#e6fffa', padding: '4px 8px', borderRadius: '6px' }}>
+                              {value}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
