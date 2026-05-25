@@ -77,7 +77,7 @@ const LoginPage = () => {
     <div className="login-page">
       <Container maxWidth="xs">
         <Paper className="login-paper" elevation={0}>
-          <Typography variant="h4" className="login-title">Aplicație pentru evaluarea burnoutului</Typography>
+          <Typography variant="h4" className="login-title">Aplicație pentru evaluarea riscului de burnout</Typography>
           <Typography variant="body2" className="login-subtitle">Conectează-te în contul tău</Typography>
           
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
