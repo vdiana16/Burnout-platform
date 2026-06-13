@@ -1,12 +1,8 @@
 """
-WSGI config for config project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/wsgi/
+Configurarea WSGI pentru proiect.
+Acest fișier expune punctul de intrare pentru serverele web sincrone
+necesare pentru a putea rula aplicația Django într-un mediu de producție clasic.
 """
-
 import os
 
 from django.core.wsgi import get_wsgi_application

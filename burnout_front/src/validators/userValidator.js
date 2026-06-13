@@ -1,3 +1,9 @@
+/**
+ * Logica de validare a formularului de înregistrare.
+ * Aplică regulile de business asupra datelor furnizate de utilizator.
+ * @param {Object} data - Datele din formularul de înregistrare.
+ * @returns {Object} Un obiect conținând mesajele de eroare, dacă există.
+ */
 import { isRequired, isValidEmail, hasMinLength, containsOnlyLetters } from '../utils/validationHelpers';
 
 export const validateRegisterForm = (data) => {

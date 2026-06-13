@@ -24,7 +24,6 @@
     margin-bottom: 25px !important;
 }
 
-/* Butonul de Salvare Verde */
 .btn-save-profile {
     background-color: #2E8B57 !important;
     color: white !important;
@@ -41,7 +40,6 @@
     box-shadow: 0 5px 15px rgba(46, 139, 87, 0.3) !important;
 }
 
-/* Butonul de Înapoi Gri */
 .btn-back-profile {
     color: #718096 !important;
     text-transform: none !important;

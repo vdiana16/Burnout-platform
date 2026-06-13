@@ -1,3 +1,9 @@
+"""
+Definirea serializatoarelor pentru API-ul REST.
+Acest modul gestionează transformarea obiectelor din baza de date în format JSON 
+pentru frontend și validarea datelor primite de la utilizatori la înregistrare, 
+autentificare sau completarea chestionarelor.
+"""
 from rest_framework import serializers
 from .models import User, Institution, PsychologistProfile, StudentProfile, Question, TestResult, Message 
 from django.contrib.auth.password_validation import validate_password
@@ -6,6 +12,10 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Extinde serializatorul implicit de autentificare JWT pentru a include 
+    informații despre rolul utilizatorului și instituția sa în răspunsul de login.
+    """
     def validate(self, attrs):
         data = super().validate(attrs)
         
@@ -31,16 +41,19 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 class InstitutionSerializer(serializers.ModelSerializer):
+    """Serializator pentru entitățile instituționale."""
     class Meta:
         model = Institution
         fields = ['id', 'name']
 
 class UserSerializer(serializers.ModelSerializer):
+    """Serializator pentru datele de bază ale utilizatorului."""
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role']
 
 class StudentProfileSerializer(serializers.ModelSerializer):
+    """Serializator pentru profilul detaliat al studentului, incluzând datele despre psihologul alocat."""
     user = UserSerializer(read_only=True)
     institution = InstitutionSerializer(read_only=True)
     
@@ -70,6 +83,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         return None
 
 class StudentListSerializer(serializers.ModelSerializer):
+    """Serializator utilizat de psihologi pentru a afișa lista studenților și ultimul lor diagnostic."""
     user_id = serializers.IntegerField(source='user.id', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -92,6 +106,7 @@ class StudentListSerializer(serializers.ModelSerializer):
         return "Fără evaluări"
     
 class PsychologistProfileSerializer(serializers.ModelSerializer):
+    """Serializator pentru profilul psihologului."""
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
@@ -105,7 +120,10 @@ class PsychologistProfileSerializer(serializers.ModelSerializer):
         ]
 
 class RegisterSerializer(serializers.ModelSerializer):
-    # 1. Definim câmpul clar ca text, nu ca ID
+    """
+    Serializator pentru înregistrarea utilizatorilor.
+    Gestionează crearea atomica a utilizatorului și a profilului asociat (student/psiholog).
+    """
     institution_name = serializers.CharField(
         write_only=True, 
         required=False, 
@@ -115,7 +133,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # 2. FOARTE IMPORTANT: Aici trebuie să scrie 'institution_name', NU 'institution'
         fields = ('username', 'password', 'email', 'first_name', 'last_name', 'role', 'institution_name')
         extra_kwargs = {'password': {'write_only': True}}
 
@@ -129,14 +146,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        # 3. Extragem textul venit din React
         institution_name = validated_data.pop('institution_name', None)        
-        
-        # MESAJ DE DEBUG: Va apărea în terminalul tău unde rulează serverul de Django
-        print(f"\n--- DEBUG: Numele instituției primit este: '{institution_name}' ---\n")
-
         inst_obj = None
-        # 4. Creăm instituția dacă există un nume
         if institution_name and institution_name.strip() != "":
             inst_obj, created = Institution.objects.get_or_create(name=institution_name.strip())
             if created:
@@ -154,7 +165,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
 
-        # 5. Asociem profilului
         if user.role == 'STUDENT':
             StudentProfile.objects.create(user=user, institution=inst_obj)
         elif user.role == 'PSYCHOLOGIST':
@@ -163,11 +173,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
     
 class QuestionSerializer(serializers.ModelSerializer):
+    """Serializator pentru întrebările chestionarului."""
     class Meta:
         model = Question
         fields = ['id', 'order', 'text', 'category', 'is_numeric']
 
 class TestResultSerializer(serializers.ModelSerializer):
+    """Serializator pentru rezultatele evaluărilor."""
     class Meta:
         model = TestResult
         fields = ['id', 'responses', 'predicted_cluster', 'taken_at', 'psychologist_notes']
@@ -189,6 +201,7 @@ class TestResultSerializer(serializers.ModelSerializer):
         return test_result
     
 class MessageSerializer(serializers.ModelSerializer):
+    """Serializator pentru sistemul de chat."""
     sender_username = serializers.ReadOnlyField(source='sender.username')
 
     class Meta:

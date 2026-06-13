@@ -7,6 +7,10 @@ from core.models.users import StudentProfile, PsychologistProfile, Message
 from django.db.models import Q
 
 class StudentProfileView(APIView):
+    """
+    Gestionează profilul studentului logat.
+    Permite citirea (GET), actualizarea parțială (PATCH) și crearea/actualizarea (POST).
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -35,6 +39,9 @@ class StudentProfileView(APIView):
         return self.patch(request)
 
 class PsychologistProfileView(APIView):
+    """
+    Gestionează profilul psihologului logat.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -63,6 +70,10 @@ class PsychologistProfileView(APIView):
         return self.patch(request)
     
 class PsychologistStudentsView(APIView):
+    """
+    Endpoint pentru panoul de control al psihologului.
+    Returnează toți studenții afiliați aceleiași instituții cu psihologul.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -84,6 +95,11 @@ class PsychologistStudentsView(APIView):
         )
     
 class MessageHistoryView(APIView):
+    """
+    Returnează istoricul conversațiilor.
+    Dacă primește un 'other_user', returnează chat-ul dintre cei doi. 
+    Altfel, returnează toate mesajele utilizatorului curent.
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

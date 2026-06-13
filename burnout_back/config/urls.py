@@ -1,3 +1,8 @@
+"""
+Configurația principală a rutelor pentru întregul proiect.
+Definește rutele pentru panoul de administrare, endpoint-urile de autentificare
+securizată pe bază de token-uri (JWT) și include rutele specifice aplicației 'core'.
+"""
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import ( TokenRefreshView)

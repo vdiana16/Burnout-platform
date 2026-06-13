@@ -1,3 +1,9 @@
+/**
+ * RegisterPage.jsx
+ * @description Gestionează înregistrarea utilizatorilor noi studenți(elevi)/psihologi.
+ * Implementează validări complexe, sugestii automate pentru instituții și
+ * tratarea erorilor de la API.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -33,6 +39,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Preluarea listei de instituții la montarea componentei pentru dropdown/autocomplete
     const fetchInstitutions = async () => {
       try {
         const res = await api.get('institutions/');
@@ -54,6 +61,7 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validare locală înainte de trimiterea cererii HTTP
     setGeneralError('');
     
     const validationErrors = validateRegisterForm(formData);
@@ -123,6 +131,7 @@ const RegisterPage = () => {
                 name="first_name" 
                 fullWidth 
                 required 
+                InputLabelProps={{ required: false }}
                 onChange={handleChange} 
                 className="register-input" 
                 error={!!fieldErrors.first_name}
@@ -133,6 +142,7 @@ const RegisterPage = () => {
                 name="last_name" 
                 fullWidth 
                 required 
+                InputLabelProps={{ required: false }}
                 onChange={handleChange} 
                 className="register-input" 
                 error={!!fieldErrors.last_name}
@@ -145,6 +155,7 @@ const RegisterPage = () => {
               name="username" 
               fullWidth 
               required 
+              InputLabelProps={{ required: false }}
               onChange={handleChange} 
               className="register-input" 
               autoComplete="off"
@@ -158,20 +169,20 @@ const RegisterPage = () => {
               type="email" 
               fullWidth 
               required 
+              InputLabelProps={{ required: false }}
               onChange={handleChange} 
               className="register-input" 
               error={!!fieldErrors.email}
               helperText={getErrorText('email')}
             />
             
-            {/* Câmpul Parolă Originală cu Ochișor */}
             <TextField 
               label="Parolă" 
               name="password" 
-              // Aici schimbăm tipul din password în text dacă ochișorul e apăsat
               type={showPassword ? "text" : "password"} 
               fullWidth 
               required 
+              InputLabelProps={{ required: false }}
               onChange={handleChange} 
               className="register-input"
               autoComplete="new-password" 
@@ -191,13 +202,13 @@ const RegisterPage = () => {
               }}
             />
 
-            {/* Noul Câmp de Confirmare Parolă */}
             <TextField 
               label="Confirmă Parola" 
               name="retype_password" 
               type={showRetypePassword ? "text" : "password"} 
               fullWidth 
               required 
+              InputLabelProps={{ required: false }}
               onChange={handleChange} 
               className="register-input"
               autoComplete="new-password" 
@@ -233,6 +244,7 @@ const RegisterPage = () => {
                   label="Instituție (Alege sau scrie una nouă)" 
                   className="register-input"
                   required
+                  InputLabelProps={{ required: false }}
                   error={!!fieldErrors.institution}
                   helperText={getErrorText('institution')}
                 />

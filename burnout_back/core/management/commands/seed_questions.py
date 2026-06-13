@@ -1,3 +1,8 @@
+"""
+Comandă personalizată pentru popularea bazei de date.
+Este utilizată pentru a insera automat setul standard de întrebări 
+necesare colectării datelor și predicției modelului XGBoost.
+"""
 from django.core.management.base import BaseCommand
 from core.models import Question
 

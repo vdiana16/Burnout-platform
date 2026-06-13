@@ -1,3 +1,13 @@
+/**
+ * PsychologistProfilePage.jsx
+ * @description Componenta pentru vizualizarea și editarea profilului profesional al psihologului.
+ * 
+ * Funcționalități principale:
+ * - Preia și afișează datele de bază aprobate instituțional (nume, prenume, email, instituție) într-un format read-only.
+ * - Permite editarea informațiilor publice de contact și profesionale (titlu, specializare, telefon, cabinet, biografie scurtă).
+ * - Oferă un indicator vizual, Progress Bar din Material-UI, care arată procentul de completare al profilului.
+ * - Realizează actualizări prin API `PATCH /psychologists/me/` și oferă feedback vizual de succes sau eroare.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios'; 
@@ -6,11 +16,14 @@ import '../../styles/StudentProfile.css';
 
 const PsychologistProfilePage = () => {
     const navigate = useNavigate();
+
+    // STATE-URI PENTRU UI ȘI FEEDBACK
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // STATE-URI PENTRU DATELE FORMULARULUI
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
@@ -23,6 +36,7 @@ const PsychologistProfilePage = () => {
         bio: ''
     });
 
+    // EFECTE
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -54,6 +68,8 @@ const PsychologistProfilePage = () => {
         fetchProfile();
     }, []);
 
+    // HELPERS PENTRU UI
+    // Calcularea progresului de completare a profilului
     const calculateProgress = () => {
         const fieldsToCheck = ['title', 'specialization', 'phone_number', 'office_location', 'bio'];
         let filledCount = 0;
@@ -63,30 +79,13 @@ const PsychologistProfilePage = () => {
         return (filledCount / fieldsToCheck.length) * 100;
     };
 
-    const handleSelectStudent = async (student) => {
-        setSelectedStudent(student);
-        setChatMessages([]); 
-        setSelectedTestIndex(0);
-        
-        try {
-        const token = localStorage.getItem('access'); 
-        const response = await api.get(`/tests/?student_id=${student.id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.data) {
-            setStudentTests(response.data);
-        }
-        } catch (err) {
-        console.error("Eroare la încărcarea istoricului studentului.", err);
-        }
-    };
-
+    // Actualizarea state-ului la scrierea în input-uri
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setSuccess(''); 
     };
 
+    // Salvarea profilului editat
     const handleSave = async () => {
         setSaving(true);
         setError('');
@@ -116,14 +115,16 @@ const PsychologistProfilePage = () => {
         }
     };
 
+    // RENDER INTERFAȚA PRINCIPALĂ
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress color="success" /></Box>;
 
     const progress = calculateProgress();
 
     return (
-        <div className="profile-page-container">
+       <div className="profile-page-container">
             <Paper className="profile-card-paper" elevation={0}>
                 
+                {/* HEADER PROFIL */}
                 <Typography variant="h4" className="profile-header-title">
                     Profil Profesional
                 </Typography>
@@ -131,11 +132,11 @@ const PsychologistProfilePage = () => {
                     Completează-ți profilul pentru a oferi încredere studenților din instituția ta.
                 </Typography>
 
-                {/* BARA DE PROGRES RĂMÂNE - E O IDEE EXCELENTĂ */}
+                {/* BARĂ DE PROGRES PENTRU COMPLETAREA PROFILULUI */}
                 <Box sx={{ mb: 4, backgroundColor: '#f0fdf4', p: 3, borderRadius: '16px', border: '1px solid #c6f6d5' }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="body2" sx={{ fontWeight: '800', color: progress === 100 ? '#276749' : '#2f855a' }}>
-                            {progress === 100 ? '✨ Profil Complet (100%)' : `Completare Profil (${progress}%)`}
+                            {progress === 100 ? ' Profil Complet (100%)' : `Completare Profil (${progress}%)`}
                         </Typography>
                     </Box>
                     <LinearProgress 
@@ -145,14 +146,16 @@ const PsychologistProfilePage = () => {
                     />
                 </Box>
 
+                {/* ZONE DE MESAJE (EROARE / SUCCES) */}
                 {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
                 {success && <Alert severity="success" sx={{ mb: 3, borderRadius: '12px' }}>{success}</Alert>}
 
+                {/* FORMULARUL DE PROFIL */}
                 <form>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         
-                        {/* --- SECȚIUNEA DATE AUTOMATE --- */}
-                        <Typography className="profile-section-title">📧 Date de Identificare (Aprobate)</Typography>
+                        {/* SECȚIUNE DATE READ-ONLY */}
+                        <Typography className="profile-section-title">Date de Identificare </Typography>
                         <Stack spacing={2}>
                             <TextField label="Nume" value={formData.last_name} fullWidth InputProps={{ readOnly: true }} sx={{ bgcolor: '#f8fafc' }} />
                             <TextField label="Prenume" value={formData.first_name} fullWidth InputProps={{ readOnly: true }} sx={{ bgcolor: '#f8fafc' }} />
@@ -162,8 +165,8 @@ const PsychologistProfilePage = () => {
 
                         <Divider sx={{ my: 2, borderColor: '#edf2f7' }} />
 
-                        {/* --- SECȚIUNEA DATE EDITABILE --- */}
-                        <Typography className="profile-section-title">💼 Informații Publice (Editabile)</Typography>
+                        {/* SECȚIUNE DATE EDITABILE */}
+                        <Typography className="profile-section-title">Informații Publice </Typography>
                         <Stack spacing={2}>
                             <TextField label="Titlu Profesional (ex: Psiholog Clinician)" name="title" value={formData.title} onChange={handleChange} fullWidth />
                             <TextField label="Specializare (ex: Terapie Cognitivă)" name="specialization" value={formData.specialization} onChange={handleChange} fullWidth />
@@ -172,7 +175,7 @@ const PsychologistProfilePage = () => {
                             <TextField label="Scurtă descriere (Bio)" name="bio" value={formData.bio} onChange={handleChange} fullWidth multiline rows={4} placeholder="Descrie abordarea ta terapeutică..." />
                         </Stack>
 
-                        {/* BUTOANE UNIFICATE */}
+                        {/* BUTOANE DE ACȚIUNE */}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 4 }}>
                             <Button 
                                 variant="contained" 

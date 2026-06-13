@@ -1,3 +1,9 @@
+/**
+ * AuthContext.jsx
+ * @description Gestionează contextul de autentificare la nivel global în aplicație.
+ * Implementează logica de persistență a datelor (prin localStorage), 
+ * starea utilizatorului și funcționalitățile de login/logout/register.
+ */
 import { createContext, useContext, useMemo, useState } from "react";
 import { authApi } from "../features/auth/authApi";
 

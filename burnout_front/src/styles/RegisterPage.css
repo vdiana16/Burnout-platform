@@ -5,8 +5,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-gradient); /* Folosește gradientul mentă definit anterior */
-  padding: 2rem 0; /* Spațiu sus/jos pentru ecrane mici */
+  background: var(--bg-gradient);
+  padding: 2rem 0; 
 }
 
 .register-paper {
@@ -28,10 +28,9 @@
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem; /* Spațiu între rânduri */
+  gap: 1.2rem;
 }
 
-/* Stiluri pentru input-urile Material UI în varianta mentă */
 .register-input .MuiOutlinedInput-root {
   border-radius: 10px;
   background-color: white;
@@ -45,7 +44,6 @@
   border-color: var(--primary-dark) !important;
 }
 
-/* Butonul de înregistrare */
 .register-button {
   margin-top: 1rem !important;
   padding: 14px 0 !important;
@@ -84,7 +82,7 @@
 .register-button:active, 
 .register-button:focus {
   background-color: #236b43 !important;
-  color: #ffffff !important; /* Rămâne alb la hover */
+  color: #ffffff !important; 
 }
 
 @keyframes fadeIn {

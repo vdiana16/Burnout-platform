@@ -1,3 +1,8 @@
+/**
+ * authApi.js
+ * @description Definește metodele de comunicare cu API-ul pentru autentificare.
+ * Fiecare funcție returnează o promisiune (Promise) bazată pe instanța Axios configurată.
+ */
 import api from "../../api/axios";
 
 export const authApi = {

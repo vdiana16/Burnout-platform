@@ -1,4 +1,3 @@
-/* Fundal alb și text verde închis pentru vizibilitate optimă */
 .app-bar {
   background-color: #ffffff !important;
   border-bottom: 1px solid #e2e8f0 !important;
@@ -6,13 +5,13 @@
 }
 
 .app-title-text {
-  color: #2E8B57 !important; /* Verde închis profesional */
+  color: #2E8B57 !important;
   font-weight: 800 !important;
   font-family: 'Inter', sans-serif;
 }
 
 .nav-menu-btn {
-  color: #4a5568 !important; /* Gri închis pentru textul butoanelor */
+  color: #4a5568 !important; 
   text-transform: none !important;
   font-weight: 600 !important;
   font-size: 0.95rem !important;

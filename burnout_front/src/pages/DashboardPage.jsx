@@ -1,3 +1,9 @@
+/**
+ * DashboardPage.jsx
+ * @description Punctul central de acces după autentificare. 
+ * Rutează utilizatorul către dashboard-ul corespunzător Student(Elev)/Psiholog
+ * bazându-se pe atributul 'role' al obiectului user.
+ */
 import React from 'react';
 import { useAuth } from '../auth/AuthContext';
 import StudentDashboardPage from './student/StudentDashboardPage';
@@ -22,7 +28,7 @@ const DashboardPage = () => {
   
   return (
     <div style={{ padding: '40px', maxWidth: '600px', margin: '50px auto', backgroundColor: '#fff5f5', border: '2px solid #fc8181', borderRadius: '12px' }}>
-      <h2 style={{ color: '#c53030', marginTop: 0 }}>🚨 Eroare de Rutare</h2>
+      <h2 style={{ color: '#c53030', marginTop: 0 }}> Eroare de Rutare</h2>
       <p style={{ color: '#2d3748' }}>Platforma a primit datele tale, dar nu recunoaște rolul pe care îl ai.</p>
       
       <h4 style={{ marginBottom: '10px', color: '#4a5568' }}>Iată ce date a primit platforma de la Backend:</h4>

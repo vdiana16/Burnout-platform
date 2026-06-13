@@ -1,3 +1,9 @@
+/**
+ * LoginPage.jsx
+ * @description Gestionează interfața de autentificare și fluxul post-login.
+ * Implementează validări de stare, vizibilitatea parolei și redirecționarea 
+ * inteligentă către profilul utilizatorului sau dashboard.
+ */
 import React, { useState, useEffect } from 'react'; 
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -29,23 +35,19 @@ const LoginPage = () => {
     setError('');
     
     try {
-      // 1. Facem logarea
       const loggedInUser = await login(credentials); 
       const token = localStorage.getItem('access');
       
-      // 2. Extragem datele fie din obiectul returnat, fie din memorie
       const savedUserString = localStorage.getItem('user');
       const fallbackUser = savedUserString && savedUserString !== 'undefined' ? JSON.parse(savedUserString) : null;
       
       const finalUser = loggedInUser || fallbackUser;
       
-      // 3. Extragem rolul în siguranță
       const role = finalUser?.role?.toLowerCase();
       
       console.log("Date User:", finalUser);
       console.log("Rol Detectat:", role);
 
-      // 4. Redirecționarea inteligentă
       if (role === 'psychologist') {
         try {
           const res = await fetch('http://127.0.0.1:8000/api/psychologists/me/', {
@@ -82,13 +84,14 @@ const LoginPage = () => {
           
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-          <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
+          <form onSubmit={handleSubmit} className="login-form" autoComplete="off" noValidate>
             <TextField
               label="Utilizator"
               name="username"
               className="login-input"
               fullWidth
               required
+              InputLabelProps={{ required: false }}
               onChange={handleChange}
               autoComplete="off"
             />
@@ -99,6 +102,7 @@ const LoginPage = () => {
               className="login-input"
               fullWidth
               required
+              InputLabelProps={{ required: false }}
               onChange={handleChange}
               autoComplete="new-password"
               InputProps={{

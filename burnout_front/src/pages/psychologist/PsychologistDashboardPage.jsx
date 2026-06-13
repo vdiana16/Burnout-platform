@@ -1,3 +1,15 @@
+/**
+ * PsychologistDashboardPage.jsx
+ * @description Componenta principală tip Dashboard (Portal) dedicată psihologilor.
+ * 
+ * Funcționalități principale:
+ * - Afișează statistici generale despre studenții asociați total studenți, cazuri de risc ridicat, stare generală.
+ * - Permite selectarea și vizualizarea detaliată a profilului unui student.
+ * - Afișează un grafic al evoluției diagnosticelor, folosind Recharts, pe baza testelor completate de student.
+ * - Prezintă istoricul complet al evaluărilor și răspunsurilor la teste.
+ * - Include un modul de Chat Live pentru comunicarea în timp real cu studenții.
+ * - Restricționează accesul psihologilor care nu au profilul completat, redirecționându-i către pagina de profil.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext'; 
@@ -10,19 +22,15 @@ const PsychologistDashboardPage = () => {
   const { user } = useAuth(); 
   const navigate = useNavigate();
   
-  // ==========================================
   // STATE-URI PENTRU DATE
-  // ==========================================
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentTests, setStudentTests] = useState([]);
   const [questionsMap, setQuestionsMap] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // ==========================================
   // STATE-URI PENTRU UI ȘI CHAT
-  // ==========================================
-  const [expandedTests, setExpandedTests] = useState({}); // Pentru acordeon (vezi/ascunde)
+  const [expandedTests, setExpandedTests] = useState({}); 
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [notification, setNotification] = useState(null);
@@ -34,15 +42,13 @@ const PsychologistDashboardPage = () => {
   const colors = {
     primary: '#2E8B57',
     danger: '#e53e3e',
-    warning: '#d69e2e', // Am pus culoarea discutată pentru moderat
+    warning: '#d69e2e',
     success: '#38a169',
     text: '#2d3748',
     cardBg: '#ffffff'
   };
 
-  // ==========================================
-  // 1. FUNCȚII DE PRELUARE DATE (FETCH)
-  // ==========================================
+  // FUNCȚII DE PRELUARE DATE 
   const fetchStudents = async () => {
     try {
       const token = localStorage.getItem('access');
@@ -78,7 +84,7 @@ const PsychologistDashboardPage = () => {
   const handleSelectStudent = async (student) => {
     setSelectedStudent(student);
     setChatMessages([]); 
-    setExpandedTests({}); // Resetăm acordeonul când schimbăm studentul
+    setExpandedTests({}); 
     
     try {
       const token = localStorage.getItem('access'); 
@@ -91,11 +97,8 @@ const PsychologistDashboardPage = () => {
     }
   };
 
-  // ==========================================
-  // 2. EFECTE (INITIALIZARE ȘI POLLING)
-  // ==========================================
-  
-  // A. Verificare profil și încărcare inițială
+  // EFECTE 
+  // Verificare profil și încărcare inițială
   useEffect(() => {
     const checkProfileAndData = async () => {
       try {
@@ -118,13 +121,13 @@ const PsychologistDashboardPage = () => {
     checkProfileAndData();
   }, [navigate]);
 
-  // B. Polling pentru lista de studenți
+  // Polling pentru lista de studenți
   useEffect(() => {
     const intervalId = setInterval(() => fetchStudents(), 5000); 
     return () => clearInterval(intervalId);
   }, []);
 
-  // C. Conexiune WebSocket Chat Live
+  // Conexiune WebSocket Chat Live
   useEffect(() => {
     if (!selectedStudent || !user?.id) return;
 
@@ -169,16 +172,14 @@ const PsychologistDashboardPage = () => {
     return () => socket.close(); 
   }, [selectedStudent, user?.id]);
 
-  // D. Autoscroll chat
+  // Autoscroll chat
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [chatMessages]);
 
-  // ==========================================
-  // 3. HELPERS PENTRU UI
-  // ==========================================
+  // HELPERS PENTRU UI
   const handleSendMessage = () => {
     if (currentMessage.trim() === "" || !selectedStudent || !wsRef.current || !user?.id) return;
 
@@ -228,9 +229,7 @@ const PsychologistDashboardPage = () => {
 
   const highRiskCount = students.filter(s => (s.last_diagnostic || '').toLowerCase().includes('ridicat')).length;
 
-  // ==========================================
-  // 4. RENDER (INTERFAȚA PRINCIPALĂ)
-  // ==========================================
+  // RENDER INTERFAȚA PRINCIPALĂ
   return (
     <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'inherit', color: colors.text }}>
       
@@ -244,9 +243,9 @@ const PsychologistDashboardPage = () => {
 
       {/* HEADER DASHBOARD */}
       <div style={{ marginBottom: '30px' }}>
-        <h1 style={{ margin: 0, fontWeight: '800', fontSize: '2.2rem' }}>Portal Management Studenți 🎓</h1>
+        <h1 style={{ margin: 0, fontWeight: '800', fontSize: '2.2rem' }}>Portal Management Elevi și Studenți</h1>
         <p style={{ color: '#718096', fontSize: '1.1rem', marginTop: '10px' }}>
-          Monitorizează starea de bine a studenților din instituția ta și oferă feedback personalizat.
+          Monitorizează starea de bine a tinerilor din instituția ta și oferă feedback personalizat.
         </p>
       </div>
 
@@ -283,9 +282,7 @@ const PsychologistDashboardPage = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '30px', alignItems: 'start' }}>
         
-        {/* ========================================================
-            COLOANA STÂNGA: LISTA STUDENȚI 
-            ======================================================== */}
+        {/* COLOANA STÂNGA: LISTA STUDENȚI */}
         <div style={{ backgroundColor: 'white', borderRadius: '24px', padding: '25px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
           <h3 style={{ fontSize: '1rem', color: '#a0aec0', marginTop: 0, marginBottom: '20px', textTransform: 'uppercase' }}>
             Studenți ({students.length})
@@ -316,14 +313,12 @@ const PsychologistDashboardPage = () => {
           </div>
         </div>
 
-        {/* ========================================================
-            COLOANA DREAPTĂ: DETALII STUDENT SELECTAT 
-            ======================================================== */}
+        {/* COLOANA DREAPTĂ: DETALII STUDENT SELECTAT */}
         <div style={{ minHeight: '70vh' }}>
           {selectedStudent ? (
             <div style={{ animation: 'fadeIn 0.4s ease' }}>
               
-              {/* 1. HEADER PROFIL STUDENT */}
+              {/* HEADER PROFIL STUDENT */}
              <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                   <div>
@@ -346,7 +341,7 @@ const PsychologistDashboardPage = () => {
                 </div>
               </div>
 
-              {/* 2. GRAFIC EVOLUȚIE */}
+              {/* GRAFIC EVOLUȚIE */}
               <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
                 <h3 style={{ marginTop: 0, marginBottom: '25px', color: '#2d3748', fontSize: '1.2rem', fontWeight: '700' }}>Evoluția Diagnosticelor</h3>
                 {studentTests.length > 1 ? (
@@ -366,7 +361,7 @@ const PsychologistDashboardPage = () => {
                 )}
               </div>
 
-              {/* 3. ISTORIC ȘI RĂSPUNSURI (ACORDEON) */}
+              {/* ISTORIC ȘI RĂSPUNSURI */}
               {studentTests.length > 0 && (
                 <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
                   <h3 style={{ margin: '0 0 20px 0', color: '#2d3748', fontSize: '1.2rem', fontWeight: '700' }}>
@@ -425,13 +420,46 @@ const PsychologistDashboardPage = () => {
 
                               {/* Lista efectivă cu întrebări */}
                               {Object.entries(result.responses).map(([key, value]) => {
-                                const questionText = questionsMap[key]?.text || `Întrebarea ${key.replace('Q', '')}`;
+                                const qOrder = parseInt(key.replace('Q', ''));
+                                const questionText = questionsMap[key]?.text || `Întrebarea ${qOrder}`;
+                                
+                                // --- LOGICA PENTRU DETECTAREA RĂSPUNSURILOR CRITICE ---
+                                let isDangerous = false;
+                                const numValue = parseFloat(value);
+
+                                if (qOrder === 20) {
+                                  // Q20: Câte ore dormi -> sub 6 ore e periculos (Roșu)
+                                  isDangerous = numValue < 6;
+                                } else if (qOrder === 15) {
+                                  // Q15: Ore de studiu -> peste 8 ore e suprasolicitare (Roșu)
+                                  isDangerous = numValue >= 8;
+                                } else if (qOrder === 27) {
+                                  // Q27: Ore online (rețele, gaming) -> peste 5 ore e periculos (Roșu)
+                                  isDangerous = numValue >= 5; 
+                                } else {
+                                  // Lista exactă a întrebărilor POZITIVE (unde 1 și 2 reprezintă o problemă / Roșu)
+                                  const positiveQuestions = [9, 10, 12, 13, 14, 18, 21, 23, 24, 25, 36, 37, 40];
+
+                                  if (positiveQuestions.includes(qOrder)) {
+                                    // La cele pozitive, scorurile mici (1, 2) sunt periculoase
+                                    isDangerous = numValue <= 2;
+                                  } else {
+                                    // La restul (de stres/epuizare), scorurile mari (4, 5) sunt periculoase
+                                    isDangerous = numValue >= 4;
+                                  }
+                                }
+
+                                // Setăm culorile dinamic
+                                const textColor = isDangerous ? colors.danger : colors.primary;
+                                const bgColor = isDangerous ? '#fff5f5' : '#e6fffa';
+                                // ------------------------------------------------------------
+
                                 return (
                                   <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '10px' }}>
                                     <span style={{ fontWeight: '500', color: '#4a5568', flex: 1, paddingRight: '15px', fontSize: '0.95rem' }}>
                                       {questionText}
                                     </span>
-                                    <span style={{ fontWeight: '900', color: colors.primary, minWidth: '40px', textAlign: 'center', backgroundColor: '#e6fffa', padding: '4px 8px', borderRadius: '6px' }}>
+                                    <span style={{ fontWeight: '900', color: textColor, minWidth: '40px', textAlign: 'center', backgroundColor: bgColor, padding: '4px 8px', borderRadius: '6px' }}>
                                       {value}
                                     </span>
                                   </div>
@@ -446,10 +474,9 @@ const PsychologistDashboardPage = () => {
                 </div>
               )}
 
-              {/* 4. ZONA DE CHAT LIVE */}
+              {/* ZONA DE CHAT LIVE */}
               <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', marginBottom: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #edf2f7' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                  <div style={{ fontSize: '1.5rem' }}>💬</div>
                   <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#2d3748', fontWeight: '800' }}>Chat Live cu {selectedStudent.first_name}</h3>
                 </div>
                                 

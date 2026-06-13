@@ -1,3 +1,9 @@
+/**
+ * ProtectedLayout.jsx
+ * @description Layout-ul principal pentru paginile securizate.
+ * Oferă o bară de navigare dinamică bazată pe rolul utilizatorului (Student/Psiholog)
+ * și gestionează contextul vizual al dashboard-ului.
+ */
 import React, { useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -61,10 +67,10 @@ const ProtectedLayout = () => {
                     handleMenuClose();
                   }}
                 >
-                  <span style={{ marginRight: '10px' }}>👤</span> Profilul Meu
+                  Profilul Meu
                 </MenuItem>
                 <MenuItem onClick={() => { logout(); handleMenuClose(); }} sx={{ color: '#e53e3e' }}>
-                  <span style={{ marginRight: '10px' }}>🚪</span> Deconectare
+                  Deconectare
                 </MenuItem>
               </Menu>
             </Box>

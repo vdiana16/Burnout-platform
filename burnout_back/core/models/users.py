@@ -1,7 +1,18 @@
+"""
+Definirea modelelor principale ale aplicației.
+Include entitățile pentru gestionarea autentificării bazate pe roluri,
+profilele detaliate ale utilizatorilor, instituțiile afiliate și 
+sistemul de mesagerie internă.
+"""
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class Institution(models.Model):
+    """
+    Model pentru entitățile educaționale.
+    Permite gruparea studenților și a psihologilor în funcție 
+    de universitatea sau liceul de care aparțin.
+    """
     name = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -10,6 +21,14 @@ class Institution(models.Model):
 
 
 class User(AbstractUser):
+    """
+    Modelul central de utilizator, extins din clasa de bază Django.
+    Implementează un sistem de autorizare bazat pe roluri pentru a 
+    direcționa corect traficul și permisiunile în interfața aplicației.
+    """
+    email = models.EmailField(unique=True, error_messages={
+        'unique': "Un utilizator cu această adresă de email există deja."
+    })
     ROLE_CHOICES = (
         ('STUDENT', 'Student'),
         ('PSYCHOLOGIST', 'Psychologist'),
@@ -21,6 +40,11 @@ class User(AbstractUser):
         return f"{self.username} ({self.role})"
 
 class PsychologistProfile(models.Model):
+    """
+    Profilul extins pentru specialiștii în sănătate mintală.
+    Asociat printr-o relație One-to-One cu modelul User, stochează 
+    detaliile profesionale necesare pentru programări și consiliere.
+    """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='psychologist_profile')
     institution = models.ForeignKey(Institution, on_delete=models.SET_NULL, null=True, blank=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
@@ -33,6 +57,11 @@ class PsychologistProfile(models.Model):
         return f"Psychologist: {self.user.username}"
 
 class StudentProfile(models.Model):
+    """
+    Profilul extins pentru studenți/elevi.
+    Aici sunt stocate caracteristicile demografice și academice care 
+    servesc drept predictori de bază pentru modelul de machine learning XGBoost.
+    """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
     institution = models.ForeignKey('Institution', on_delete=models.SET_NULL, null=True, blank=True)
     age = models.IntegerField(null=True, blank=True)
@@ -60,6 +89,11 @@ class StudentProfile(models.Model):
         return f"Profil: {self.user.username}"
     
 class Message(models.Model):
+    """
+    Modelul pentru gestionarea comunicării.
+    Stochează istoricul mesajelor asincrone schimbate între studenți și psihologi,
+    fiind baza pentru funcționalitatea de chat în timp real via WebSockets.
+    """
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     content = models.TextField()

@@ -1,3 +1,8 @@
+"""
+Configurarea rutării pentru WebSockets.
+Definește pattern-urile URL-urilor prin care aplicația gestionează 
+comunicarea asincronă în timp real între clienți.
+"""
 from django.urls import re_path
 from . import consumers
 

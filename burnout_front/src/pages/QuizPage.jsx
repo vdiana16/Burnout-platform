@@ -1,3 +1,14 @@
+/**
+ * QuizPage.jsx
+ * @description Interfața principală pentru completarea chestionarului.
+ * * Funcționalități principale:
+ * - Verifică existența profilului studentului/elevului, redirecționează dacă este incomplet.
+ * - Preia dinamic setul de întrebări de la API și le sortează/grupează pe categorii tematice.
+ * - Urmărește progresul completării printr-o bară vizuală interactivă.
+ * - Validează completitudinea formularului și face auto-scroll către prima întrebare ratată.
+ * - Transmite răspunsurile către motorul de predicție XGBoost.
+ * - Afișează un ecran de rezultat personalizat sigur/alertă/pericol pe baza clusterului prezis de model.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,7 +30,6 @@ const QuizPage = () => {
       try {
         const token = localStorage.getItem('access'); 
         
-        // 1. Verificăm Profilul
         const profileResponse = await fetch('http://127.0.0.1:8000/api/students/me/', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -29,7 +39,6 @@ const QuizPage = () => {
           return; 
         }
 
-        // 2. Aducem Întrebările
         const questionsResponse = await fetch('http://127.0.0.1:8000/api/questions/', {
           headers: {
             'Authorization': `Bearer ${token}`, 
@@ -169,8 +178,6 @@ const QuizPage = () => {
   const answeredQuestions = Object.values(answers).filter(val => val !== undefined && val !== '').length;
   const progress = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 100 : 0;
 
-  // --------------------------------
-
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#2E8B57' }}><h3>Se încarcă evaluarea...</h3></div>;
   if (error) return <div style={{ textAlign: 'center', color: '#e53e3e', padding: '50px' }}><h3>{error}</h3></div>;
 
@@ -275,7 +282,7 @@ const QuizPage = () => {
         </div>
         <form onSubmit={handleSubmit}>
           
-          {/* Randăm fiecare grup (secțiune) creat */}
+          {/* Randăm fiecare grup creat */}
           {Object.entries(groupedQuestions).map(([title, groupData], groupIndex) => (
               <div key={title} style={{ marginBottom: '40px' }}>
                   
@@ -344,7 +351,7 @@ const QuizPage = () => {
                             </div>
                           </div>
                         )}
-                        {isUnanswered && <p style={{ color: '#e53e3e', fontSize: '0.9rem', marginTop: '15px', marginBottom: '0' }}>⚠️ Răspuns obligatoriu.</p>}
+                        {isUnanswered && <p style={{ color: '#e53e3e', fontSize: '0.9rem', marginTop: '15px', marginBottom: '0' }}> Răspuns obligatoriu.</p>}
                       </div>
                     );
                   })}

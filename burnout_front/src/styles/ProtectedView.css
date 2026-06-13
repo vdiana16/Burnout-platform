@@ -2,7 +2,7 @@
 
 .protected-layout {
   min-height: 100vh;
-  background-color: #f8faf9; /* Un gri-verzui extrem de deschis pentru contrast */
+  background-color: #f8faf9; 
 }
 
 .app-bar {

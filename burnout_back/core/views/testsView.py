@@ -15,11 +15,16 @@ scaler = joblib.load(os.path.join(ML_MODELS_DIR, 'scaler.pkl'))
 label_encoder = joblib.load(os.path.join(ML_MODELS_DIR, 'label_encoder.pkl'))
 
 class QuestionListView(generics.ListAPIView):
+    """Endpoint care expune întrebările din baza de date pentru frontend."""
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
     permission_classes = [IsAuthenticated]
 
 class SubmitTestView(generics.CreateAPIView):
+    """
+    Prelucrează răspunsurile formularului, calculează variabilele predictive, 
+    apelează modelul XGBoost și salvează rezultatul obținut.
+    """
     serializer_class = TestResultSerializer
     permission_classes = [IsAuthenticated]
 
@@ -125,27 +130,29 @@ class SubmitTestView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 class ResultsView(generics.ListAPIView):
+    """
+    Returnează rezultatele testelor.
+    Dacă un psiholog cere istoricul unui anumit student, îl returnează.
+    Dacă un student își cere istoricul, îl returnează pe al său.
+    """
     serializer_class = TestResultSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         
-        # Preluăm ID-ul studentului din request (dacă există)
-        # Ex: GET /api/.../results/?student_id=4
         student_id = self.request.query_params.get('student_id')
 
         # Cazul 1: Un psiholog cere istoricul unui anumit student
         if student_id and hasattr(user, 'psychologist_profile'):
             psychologist = user.psychologist_profile
             
-            # Returnăm testele studentului doar dacă sunt de la aceeași instituție
             return TestResult.objects.filter(
                 student__id=student_id,
                 student__institution=psychologist.institution
             ).order_by('-taken_at')
 
-        # Cazul 2: Un student își cere propriul istoric (comportamentul original)
+        # Cazul 2: Un student își cere propriul istoric 
         if hasattr(user, 'student_profile'):
             return TestResult.objects.filter(student=user.student_profile).order_by('-taken_at')
             

@@ -1,7 +1,19 @@
+/**
+ * StudentDashboardPage.jsx
+ * @description Componenta principală tip Dashboard (Portal) dedicată studenților.
+ * * Funcționalități principale:
+ * - Afișează un mesaj de bun venit personalizat și starea generală curentă: risc ridicat/moderat/scăzut).
+ * - Prezintă o analiză detaliată a factorilor de risc (stres, procrastinare) printr-un grafic Radar.
+ * - Permite vizualizarea istoricului evaluărilor și a răspunsurilor specifice acordate.
+ * - Afișează evoluția stării de bine în timp printr-un grafic de tip LineChart.
+ * - Include un modul integrat de Chat Live pentru a comunica direct cu psihologul alocat.
+ * - Oferă informații de contact despre psihologul asociat, dacă există.
+ * - Verifică stadiul completării profilului și direcționează utilizatorul spre pagina de profil dacă datele esențiale lipsesc.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext'; 
-import api from '../../api/axios'; // IMPORTUL LIPSĂ A FOST ADĂUGAT
+import api from '../../api/axios';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis 
@@ -10,6 +22,8 @@ import {
 const StudentDashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // STATE-URI PENTRU DATE ȘI UI
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
@@ -20,12 +34,8 @@ const StudentDashboardPage = () => {
   const [notification, setNotification] = useState(null);
   const [questions, setQuestions] = useState([]); 
   const [expandedTests, setExpandedTests] = useState({}); 
-  const toggleTestResponses = (testId) => {
-      setExpandedTests(prev => ({
-          ...prev,
-          [testId]: !prev[testId]
-      }));
-  };  
+  
+  // REFERINȚE PENTRU CHAT ȘI SCROLL
   const socketRef = useRef(null);
   const chatContainerRef = useRef(null);
   const shouldScrollRef = useRef(false);
@@ -43,12 +53,19 @@ const StudentDashboardPage = () => {
     radarStroke: '#6b46c1'
   };
 
-  // 1. CONEXIUNEA LA CHAT (WEBSOCKET)
+   // HELPERS PENTRU UI
+  const toggleTestResponses = (testId) => {
+      setExpandedTests(prev => ({
+          ...prev,
+          [testId]: !prev[testId]
+      }));
+  };  
+
+  // EFECTE
+  // Conexiunea la Chat
   useEffect(() => {
       if (!user?.id) return;
       const url = `ws://127.0.0.1:8000/ws/chat/${user.id}/`;
-      
-      // 1. Definim socket-ul într-o variabilă LOCALĂ
       const socket = new WebSocket(url);
       socketRef.current = socket;
 
@@ -57,7 +74,6 @@ const StudentDashboardPage = () => {
         shouldScrollRef.current = true;
 
         setMessages((prev) => {
-          // FILTRU ANTIDUPLICARE: Ignoră mesajul dacă e identic cu ultimul
           const lastMsg = prev[prev.length - 1];
           if (lastMsg && lastMsg.sender_id === data.sender_id && lastMsg.message === data.message) {
               return prev; 
@@ -77,12 +93,13 @@ const StudentDashboardPage = () => {
         }
       };
 
-      // 2. CURĂȚAREA: Închidem fix conexiunea locală când ieșim din pagină
       return () => {
           socket.close(); 
       };
   }, [user?.id]);
 
+
+  // Autoscroll Chat
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -102,7 +119,7 @@ const StudentDashboardPage = () => {
       setNewMessage('');
   };
 
-  // 2. PRELUAREA DATELOR ȘI VERIFICAREA PROFILULUI (Logica unificată)
+  // Preluarea datelor și verificarea profilului
   useEffect(() => {
     const fetchResults = async () => {
       try {
@@ -191,7 +208,7 @@ const StudentDashboardPage = () => {
 
   const lastResult = results.length > 0 ? results[0] : null;
 
-  // --- PREGĂTIRE DATE LINE CHART (EVOLUȚIE) ---
+  // Pregătire date line chart - evoluție
   const chartData = [...results].reverse().map(res => {
     let score = 1; 
     const cluster = res.predicted_cluster.toLowerCase();
@@ -227,7 +244,7 @@ const StudentDashboardPage = () => {
     return null;
   };
 
-  // --- PREGĂTIRE DATE RADAR CHART (FACTORI DE STRES) ---
+  // Pregătire date radar chart - factori de stres
   const getRadarData = (responses) => {
     if (!responses) return [];
 
@@ -253,6 +270,7 @@ const StudentDashboardPage = () => {
   const radarData = lastResult ? getRadarData(lastResult.responses) : [];
   const topFactor = radarData.length > 0 ? radarData.reduce((prev, current) => (prev.scor > current.scor) ? prev : current) : null;
 
+  // RENDER INTERFAȚA PRINCIPALĂ
   return (
     <div style={{ padding: '40px 20px', maxWidth: '1000px', margin: '0 auto', color: colors.text }}>
       {notification && 
@@ -264,7 +282,7 @@ const StudentDashboardPage = () => {
         </div>
       }
 
-      {/* 1. HERO BANNER */}
+      {/* HERO BANNER */}
       <div style={{ 
         background: `linear-gradient(135deg, ${colors.primary} 0%, #1b4332 100%)`,
         borderRadius: '24px', padding: '40px', color: 'white',
@@ -274,7 +292,7 @@ const StudentDashboardPage = () => {
       }}>
         <div style={{ maxWidth: '65%' }}>
           <h1 style={{ fontSize: '2.4rem', marginBottom: '12px', fontWeight: '800' }}>
-             Salutare, {user?.first_name || 'Student'}! 👋
+             Salutare, {user?.first_name || 'Student'}!
           </h1>
           <p style={{ fontSize: '1.15rem', opacity: 0.9, lineHeight: '1.5' }}>
             Ești la un pas de a înțelege mai bine starea ta de bine. Monitorizarea constantă te ajută să previi epuizarea.
@@ -331,13 +349,11 @@ const StudentDashboardPage = () => {
               {/* Rândul 1: Specializare & Locație */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', color: '#4a5568', fontSize: '0.95rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{ color: '#a0aec0', fontSize: '1.1rem' }}>🔖</span>
                   <span style={{ color: '#718096' }}>Specializare:</span>
                   <span style={{ fontWeight: '600' }}>{assignedPsychologist.specialization || 'Nespecificată'}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <span style={{ color: '#a0aec0', fontSize: '1.1rem' }}>📍</span>
-                  <span style={{ color: '#718096' }}>Locație:</span>
                   <span style={{ fontWeight: '600' }}>{assignedPsychologist.office_location || assignedPsychologist.institution_name || 'Cabinet Online'}</span>
                 </div>
               </div>
@@ -358,7 +374,7 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 2. STATUS CURENT */}
+      {/* STATUS CURENT */}
       <div style={{ 
         backgroundColor: 'white', padding: '25px 40px', borderRadius: '24px', 
         boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8',
@@ -383,7 +399,7 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 3. ANALIZĂ DETALIATĂ (RADAR CHART) */}
+      {/* ANALIZĂ DETALIATĂ */}
       {lastResult && radarData.length > 0 && (
         <div style={{ marginBottom: '40px' }}>
           <h2 style={{ fontSize: '1.4rem', marginBottom: '20px', fontWeight: '800' }}>Amprenta Factorilor de Risc</h2>
@@ -435,16 +451,14 @@ const StudentDashboardPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {results.map((result, index) => {
               // Verificăm dacă testul curent a fost "apăsat" pentru a-i vedea răspunsurile
-              const isExpanded = expandedTests[result.id];
-              
-              // Formatăm data testului
+              const isExpanded = expandedTests[result.id];              
               const dateObj = new Date(result.taken_at);
               const formattedDate = `${dateObj.toLocaleDateString('ro-RO', { day: '2-digit', month: 'long', year: 'numeric' })} - ${dateObj.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}`;
               
               return (
                 <div key={result.id} style={{ border: '1px solid #edf2f7', borderRadius: '16px', padding: '20px', backgroundColor: isExpanded ? '#ffffff' : '#f8fafc', transition: 'all 0.3s ease' }}>
                   
-                  {/* HEADER-UL TESTULUI (Data, Rezultat și Buton) */}
+                  {/* HEADER-UL TESTULUI */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: 'bold', color: '#4a5568', fontSize: '1.1rem' }}>
@@ -472,7 +486,7 @@ const StudentDashboardPage = () => {
                     </button>
                   </div>
 
-                  {/* LISTA DE RĂSPUNSURI (vizibilă doar dacă isExpanded e true) */}
+                  {/* LISTA DE RĂSPUNSURI */}
                   {isExpanded && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #edf2f7' }}>
                       {Object.entries(result.responses).map(([key, value]) => {
@@ -480,12 +494,37 @@ const StudentDashboardPage = () => {
                         const questionObj = questions.find(q => q.order === qOrder);
                         const questionText = questionObj ? questionObj.text : `Întrebarea ${qOrder}`;
 
+                        let isDangerous = false;
+                        const numValue = parseFloat(value);
+
+                        if (questionObj) {
+                          if (questionObj.is_numeric) {
+                            if (qOrder === 20) {
+                              isDangerous = numValue < 6;
+                            } else if (qOrder === 15) {
+                              isDangerous = numValue >= 8;
+                            } else if (qOrder === 27) {
+                              isDangerous = numValue >= 5; 
+                            }
+                          } else {
+                            const positiveQuestions = [9, 10, 12, 13, 14, 18, 21, 23, 24, 25, 36, 37, 40];
+                            if (positiveQuestions.includes(qOrder)) {
+                              isDangerous = numValue <= 2;
+                            } else {
+                              isDangerous = numValue >= 4;
+                            }
+                          }
+                        }
+
+                        const textColor = isDangerous ? colors.danger : colors.primary;
+                        const bgColor = isDangerous ? '#fff5f5' : '#e6fffa';
+
                         return (
                           <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '10px' }}>
                             <span style={{ fontWeight: '500', color: '#4a5568', flex: 1, paddingRight: '15px', fontSize: '0.95rem' }}>
                               {questionText}
                             </span>
-                            <span style={{ fontWeight: '900', color: colors.primary, minWidth: '40px', textAlign: 'center', backgroundColor: '#e6fffa', padding: '4px 8px', borderRadius: '6px' }}>
+                            <span style={{ fontWeight: '900', color: textColor, minWidth: '40px', textAlign: 'center', backgroundColor: bgColor, padding: '4px 8px', borderRadius: '6px' }}>
                               {value}
                             </span>
                           </div>
@@ -501,7 +540,7 @@ const StudentDashboardPage = () => {
         </div>
       )}
 
-      {/* 4. GRAFIC EVOLUȚIE (LINE CHART) */}
+      {/* GRAFIC EVOLUȚIE */}
       <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', border: '1px solid #f0f4f8', marginBottom: '40px' }}>
         <h3 style={{ marginTop: 0, marginBottom: '30px', fontSize: '1.2rem', fontWeight: '700' }}>Evoluția Generală în Timp</h3>
         
@@ -530,16 +569,15 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* 5. CHAT LIVE CU PSIHOLOGUL */}
+      {/* CHAT LIVE CU PSIHOLOGUL */}
       <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', marginBottom: '40px' }}>
         <h2 style={{ fontSize: '1.6rem', marginBottom: '20px', fontWeight: '800' }}>
-          Consiliere Live 💬
+          Consiliere Live
         </h2>
         
         {/* Verificăm dacă există un psiholog alocat */}
         {!psychologistId ? (
           <div style={{ padding: '30px', backgroundColor: '#fff5f5', borderRadius: '16px', border: '1px solid #fed7d7', color: '#c53030', textAlign: 'center' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '10px' }}>⚠️</div>
               <h3 style={{ margin: '0 0 10px 0' }}>Niciun psiholog alocat instituției tale</h3>
               <p style={{ margin: 0 }}>În prezent, universitatea ta nu are un psiholog înregistrat pe platformă. Modulul de mesagerie va fi activat automat imediat ce un specialist se va alătura.</p>
           </div>

@@ -1,3 +1,7 @@
+/**
+ * Utilități pentru validarea datelor.
+ * Conține funcții primitive pentru verificarea integrității input-urilor.
+ */
 export const isRequired = (value) => {
   if (value === null || value === undefined) return false;
   return String(value).trim() !== "";

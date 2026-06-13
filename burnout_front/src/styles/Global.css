@@ -8,7 +8,7 @@
   --text-body: #495057;
   --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   --border-radius: 16px;
-  --navbar-height: 80px; /* Înălțimea standard a Navbar-ului */
+  --navbar-height: 80px;
 }
 
 html, body {
